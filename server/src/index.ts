@@ -8,6 +8,7 @@ import {
   startFirstQueued,
 } from "./db";
 import { jsonResponseWrapper } from "./wrapper";
+import { deleteCron, getCron, setCron } from "./cron";
 const port = Number(process.env.PORT) || 3000;
 
 const sftp = new SFTP();
@@ -32,6 +33,11 @@ Bun.serve({
     "/queue/start": {
       POST: jsonResponseWrapper(startFirstQueued),
     },
+    "/cron": {
+      GET: jsonResponseWrapper(getCron),
+      POST: jsonResponseWrapper(setCron),
+      DELETE: jsonResponseWrapper(deleteCron)
+    }
   },
   fetch() {
     return new Response("Not Found", { status: 404 });

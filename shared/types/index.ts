@@ -28,3 +28,8 @@ export interface QueueResponse {
   items: QueueItem[];
   count: number;
 }
+
+export interface Cron {
+  time: string;
+  exists: boolean;
+}

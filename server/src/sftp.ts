@@ -21,7 +21,7 @@ export class SFTP {
     return await $`echo "${script}" | sftp ${serverUrl}`.text();
   }
 
-  parseScriptExecution(result: string, basePath = "/pool/public"): FileEntry[] {
+  parseScriptExecution(result: string, basePath = "/"): FileEntry[] {
     const lines = result.split("\n").map((l) => l.trim());
     const entries: {
       name: string;
@@ -108,7 +108,7 @@ export class SFTP {
       // Calculate corresponding local path
       const localBase = process.env.LOCAL_ROOT || "/tmp";
       const relativeRemotePath = entry.fullPath.replace(
-        process.env.REMOTE_ROOT || "/pool/public",
+        process.env.REMOTE_ROOT || "/",
         "",
       );
       const localPath = require("path").join(localBase, relativeRemotePath);

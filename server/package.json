@@ -6,7 +6,8 @@
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "lint": "eslint --fix .",
-    "test": "bun test"
+    "test": "bun test",
+    "processQueue": "bun run src/processQueue.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
