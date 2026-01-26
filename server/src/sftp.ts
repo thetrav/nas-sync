@@ -1,77 +1,40 @@
 import { $ } from "bun";
-import { parseLsLine, formatBytes } from "./fileListing";
+import { formatBytes } from "./fileListing";
 import { ServerError } from "./ServerError";
-import { FileEntry } from "@shared/types";
-import { DownloadQueue } from "./db";
-
+import { FileEntry, FileListingResponse } from "@shared/types";
+import { DownloadJob } from "./queue";
+import { readFileSync } from 'node:fs';
 let currentPath = process.env.REMOTE_ROOT ?? "/";
+import Client from 'ssh2-sftp-client';
+
+const config = {
+  host: process.env.SERVER_URL,
+  port: 22,
+  username: process.env.USER_NAME,
+  privateKey: readFileSync(process.env.KEY_PATH!)
+}
 
 export class SFTP {
-  createScript(path: string): string {
-    return `cd ${path}\nls -la\nquit`;
-  }
-
-  async executeScript(script: string): Promise<string> {
-    const serverUrl = process.env.SERVER_URL;
-
-    if (!serverUrl) {
-      throw new Error("Server URL not configured");
-    }
-
-    return await $`echo "${script}" | sftp ${serverUrl}`.text();
-  }
-
-  parseScriptExecution(result: string, basePath = "/"): FileEntry[] {
-    const lines = result.split("\n").map((l) => l.trim());
-    const entries: {
-      name: string;
-      isDirectory: boolean;
-      fullPath: string;
-      size?: string;
-    }[] = [];
-
-    lines.forEach((line) => {
-      // Skip sftp prompts and empty lines
-      if (line.startsWith("sftp>") || line === "") {
-        return;
-      }
-
-      const parsed = parseLsLine(line);
-      if (!parsed) {
-        console.log("warning: cannot parse line, skipping", line);
-        return;
-      }
-      const { name, permissions, size } = parsed;
-
-      // Skip . and .. entries
-      if (name === "." || name === "..") {
-        return;
-      }
-
-      const isDir = permissions.startsWith("d");
-      const fullPath = `${basePath}/${name}`;
-
-      entries.push({
-        name: name,
-        isDirectory: isDir,
-        fullPath: fullPath,
-        size: isDir ? "" : formatBytes(size),
-      });
-    });
-    return entries;
-  }
 
   async listFolderContents(path: string): Promise<FileEntry[]> {
+    const client = new Client()
     try {
-      const script = this.createScript(path);
-      const result = await this.executeScript(script);
-      return this.parseScriptExecution(result, path);
+      await client.connect(config)
+      const data = await client.list(path);
+      return data.map(fi => ({
+        name: fi.name,
+        isDirectory: fi.type == 'd',
+        fullPath: `${path}/${fi.name}`,
+        size: formatBytes(fi.size)
+      }))
     } catch (error) {
       throw new Error(`Failed to list directory ${path}: ${error}`);
+    } finally {
+      client.end();
     }
   }
 
-  async listSftp(req: Request) {
+  async listSftp(req: Request): Promise<FileListingResponse> {
     const remoteRoot = process.env.REMOTE_ROOT;
 
     if (!remoteRoot) {
@@ -114,7 +77,7 @@ export class SFTP {
       const localPath = require("path").join(localBase, relativeRemotePath);
       
       // Check if file is in queue
-      const queueItem = DownloadQueue.findByPath(entry.fullPath, localPath);
+      const queueItem = DownloadJob.findByPath(entry.fullPath, localPath);
       const queueStatus = queueItem?.status as 'queued' | 'downloading' | 'completed' | 'failed';
       
       return {
@@ -126,7 +89,30 @@ export class SFTP {
     return {
       currentPath,
       entries: entriesWithQueueStatus,
-      remoteRoot,
     };
+  }
+
+  async downloadFile(job: DownloadJob ): Promise<void> {
+    const client = new Client();
+    
+    try {
+      await client.connect(config);
+      
+      const localDir = require("path").dirname(job.local_path);
+      await $`mkdir -p ${localDir}`;
+      
+      await client.fastGet(job.remote_path, job.local_path, {
+        concurrency: parseInt(process.env.CONCURRENCY ?? '1'),
+        step: (transferred) => {
+          job.completed = formatBytes(transferred);
+          console.log(`${job.completed} of ${job.size}`)
+          job.update();
+        }
+      });
+    } catch (error) {
+      throw new Error(`Failed to download ${job.remote_path} to ${job.local_path}: ${error}`);
+    } finally {
+      client.end();
+    }
   }
 }

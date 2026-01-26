@@ -2,7 +2,6 @@ import { readdir, stat, mkdir } from "fs/promises";
 import { join } from "path";
 import { ServerError } from "./ServerError";
 import { formatBytes } from "./fileListing";
-import { DownloadQueue } from "./db";
 
 // Store current local directory path in memory
 let currentLocalPath = process.env.LOCAL_ROOT ?? "/tmp";
@@ -42,20 +41,11 @@ export async function listLocal(req: Request) {
       const stats = await stat(fullPath);
       const size = entry.isDirectory() ? "" : formatBytes(stats.size);
       
-      // Check queue status for files
-      let queueStatus: 'queued' | 'downloading' | 'completed' | 'failed' | undefined;
-      if (!entry.isDirectory()) {
-        // Check if file is in queue
-        const queueItem = DownloadQueue.findByPath("", fullPath);
-        queueStatus = queueItem?.status as 'queued' | 'downloading' | 'completed' | 'failed';
-      }
-      
       return {
         name: entry.name,
         isDirectory: entry.isDirectory(),
         fullPath: fullPath,
-        size: size,
-        queueStatus: queueStatus || undefined,
+        size: size
       };
     }),
   );

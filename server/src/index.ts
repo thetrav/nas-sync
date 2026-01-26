@@ -4,9 +4,8 @@ import { listLocal, createLocalFolder } from "./localFileSystem";
 import {
   queueList,
   queueEnqueue,
-  removeFromQueue,
-  startFirstQueued,
-} from "./db";
+  removeFromQueue
+} from "./queue";
 import { jsonResponseWrapper } from "./wrapper";
 import { deleteCron, getCron, setCron } from "./cron";
 const port = Number(process.env.PORT) || 3000;
@@ -29,9 +28,6 @@ Bun.serve({
         const id = Number(req.params.id);
         return removeFromQueue(id);
       }),
-    },
-    "/queue/start": {
-      POST: jsonResponseWrapper(startFirstQueued),
     },
     "/cron": {
       GET: jsonResponseWrapper(getCron),

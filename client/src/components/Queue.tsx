@@ -72,7 +72,7 @@ export function Queue({ items, refreshQueue }: QueueProps) {
       </div>
       
       {items.length > 0 ? (
-        <Table headers={['Status', 'Remote Path', 'Local Path', 'Created', 'Actions']}>
+        <Table headers={['Status', 'Remote Path', 'Local Path','Size', 'Completed', 'Actions']}>
           {items.map((item) => (
             <tr key={item.id}>
               <TableCell style={{ 
@@ -85,7 +85,8 @@ export function Queue({ items, refreshQueue }: QueueProps) {
               </TableCell>
               <TableCell>{item.remote_path}</TableCell>
               <TableCell>{item.local_path}</TableCell>
-              <TableCell>{item.created_at}</TableCell>
+              <TableCell>{item.size}</TableCell>
+              <TableCell>{item.completed ?? ""}</TableCell>
               <TableCell>
                 <button 
                   style={{ 

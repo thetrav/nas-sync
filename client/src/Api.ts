@@ -2,6 +2,7 @@ import type {
   QueueResponse,
   FileListingResponse,
   QueueItem,
+  QueueItemCreate,
 } from "@shared/types";
 const baseUrl = "/api";
 
@@ -72,14 +73,10 @@ async function post<T>(path: string, data: object): Promise<T> {
   }
 }
 
-export async function enqueueFile(
-  remotePath: string,
-  localPath: string,
-): Promise<QueueItem> {
-  return await post<QueueItem>("/queue", {
-    remote_path: remotePath,
-    local_path: localPath,
-  });
+export async function enqueueFile(obj: QueueItemCreate): Promise<QueueItem> {
+  return await post<QueueItem>("/queue", 
+    obj
+  );
 }
 
 export async function startFirstQueued(): Promise<any> {

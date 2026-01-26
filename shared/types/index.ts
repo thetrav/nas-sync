@@ -9,7 +9,6 @@ export interface FileEntry {
 export interface FileListingResponse {
   currentPath: string;
   entries: FileEntry[];
-  rootPath: string;
 }
 
 export interface QueueItem {
@@ -18,10 +17,11 @@ export interface QueueItem {
   remote_path: string;
   local_path: string;
   status: 'queued' | 'downloading' | 'completed' | 'failed';
-  pid?: number;
   created_at: string;
   started_at?: string;
   completed_at?: string;
+  size: string;
+  completed: string;
 }
 
 export interface QueueResponse {
@@ -32,4 +32,10 @@ export interface QueueResponse {
 export interface Cron {
   time: string;
   exists: boolean;
+}
+
+export interface QueueItemCreate {
+  remote_path: string;
+  local_path: string;
+  size: string;
 }
