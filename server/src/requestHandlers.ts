@@ -1,7 +1,17 @@
+import { withDb } from "./db";
 import { ServerError } from "./ServerError";
 import { BunRequest } from "bun";
 
-export function jsonResponseWrapper<T extends object>(handler: (req: BunRequest) => T | Promise<T>) {
+export type RequestHandler = (req:BunRequest) => Promise<Response>
+export type AppHandler<T> = (req: BunRequest) => T | Promise<T>;
+
+export function dbHandler<T extends object>(handler: AppHandler<T>): RequestHandler {
+  return async (req: BunRequest): Promise<Response> => {
+    return withDb(req, jsonHandler(handler));
+  }
+}
+
+export function jsonHandler<T extends object>(handler: AppHandler<T>) {
   return async (req: BunRequest): Promise<Response> => {
     try {
       const result = await handler(req);

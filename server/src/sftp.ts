@@ -92,7 +92,7 @@ export class SFTP {
     };
   }
 
-  async downloadFile(job: DownloadJob ): Promise<void> {
+  async downloadFile(job: DownloadJob, progressFn: (transferred: number) => unknown ): Promise<void> {
     const client = new Client();
     
     try {
@@ -103,11 +103,7 @@ export class SFTP {
       
       await client.fastGet(job.remote_path, job.local_path, {
         concurrency: parseInt(process.env.CONCURRENCY ?? '1'),
-        step: (transferred) => {
-          job.completed = formatBytes(transferred);
-          console.log(`${job.completed} of ${job.size}`)
-          job.update();
-        }
+        step: progressFn
       });
     } catch (error) {
       throw new Error(`Failed to download ${job.remote_path} to ${job.local_path}: ${error}`);

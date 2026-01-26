@@ -34,8 +34,8 @@ export class DownloadJob implements QueueItem {
   }
 
   static create(obj: {remote_path: string, local_path: string, size: number}) {
-    const {position} = db.query(`SELECT MAX(position) as position FROM ${table};`).get() as {position: number};
-    db.query(`insert into ${table} (position, remote_path, local_path, status, created_at, started_at, completed_at, size, completed) 
+    const {position} = db().query(`SELECT MAX(position) as position FROM ${table};`).get() as {position: number};
+    db().query(`insert into ${table} (position, remote_path, local_path, status, created_at, started_at, completed_at, size, completed) 
         values ($position, $remote_path, $local_path, $status, $created_at, $started_at, $completed_at, $size, $completed)`).run(
             {
                 $position: position,
@@ -52,14 +52,14 @@ export class DownloadJob implements QueueItem {
   }
 
     static all() {
-      return db
+      return db()
         .query(`${select} order by position asc`)
         .as(DownloadJob)
         .all();
     }
 
     static get(id: number) {
-        return db
+        return db()
         .query(
             `${select} where id = $id`,
         )
@@ -68,7 +68,7 @@ export class DownloadJob implements QueueItem {
     }
 
     static findByPath(remote_path: string, local_path: string) {
-      return db
+      return db()
         .query(
             `${select} where remote_path = $remote_path and local_path = $local_path`,
         )
@@ -79,20 +79,20 @@ export class DownloadJob implements QueueItem {
     update() {
         const updateFields = columns.map(c => `${c} = $${c}`).join(", ")
         const params: Record<string, any> = {};
-        Object.entries(columns).forEach((c, v) => {
-            params[`$${c}`] = v;
+        columns.forEach((key) => {
+            params[`$${key}`] = this[key];
         })
-        const up = db.prepare(
+        const up = db().prepare(
         `update ${table} set ${updateFields} where id = $id`,
         )
-        db.transaction(p => up.run(p))(params);
+        db().transaction(p => up.run(p))(params);
     }
 
     remove() {
-        db.query(
+        db().query(
         `update ${table} set position = position - 1 where position > (select position from ${table} where id = $id)`,
         ).run({ $id: this.id });
-        db.query(`delete from ${table} where id = $id`).run({ $id: this.id });
+        db().query(`delete from ${table} where id = $id`).run({ $id: this.id });
     }
 }
 

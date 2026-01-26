@@ -6,7 +6,7 @@ import {
   queueEnqueue,
   removeFromQueue
 } from "./queue";
-import { jsonResponseWrapper } from "./wrapper";
+import { dbHandler } from "./requestHandlers";
 import { deleteCron, getCron, setCron } from "./cron";
 const port = Number(process.env.PORT) || 3000;
 
@@ -16,23 +16,23 @@ Bun.serve({
   port,
   routes: {
     "/tv": listSonarr,
-    "/sftp": jsonResponseWrapper((req) => sftp.listSftp(req)),
-    "/local": jsonResponseWrapper(listLocal),
-    "/local/create": jsonResponseWrapper(createLocalFolder),
+    "/sftp": dbHandler((req) => sftp.listSftp(req)),
+    "/local": dbHandler(listLocal),
+    "/local/create": dbHandler(createLocalFolder),
     "/queue": {
-      GET: jsonResponseWrapper(queueList),
-      POST: jsonResponseWrapper(queueEnqueue),
+      GET: dbHandler(queueList),
+      POST: dbHandler(queueEnqueue),
     },
     "/queue/:id": {
-      DELETE: jsonResponseWrapper((req) => {
+      DELETE: dbHandler((req) => {
         const id = Number(req.params.id);
         return removeFromQueue(id);
       }),
     },
     "/cron": {
-      GET: jsonResponseWrapper(getCron),
-      POST: jsonResponseWrapper(setCron),
-      DELETE: jsonResponseWrapper(deleteCron)
+      GET: dbHandler(getCron),
+      POST: dbHandler(setCron),
+      DELETE: dbHandler(deleteCron)
     }
   },
   fetch() {
