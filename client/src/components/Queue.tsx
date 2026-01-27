@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { removeFromQueue, startFirstQueued } from '../Api';
+import { removeFromQueue } from '../Api';
 import type { QueueItem } from '@shared/types';
 import { Table } from './Table';
 import { TableCell } from './TableCell';
@@ -33,41 +33,12 @@ export function Queue({ items, refreshQueue }: QueueProps) {
     }
   };
 
-  const handleStart = async () => {
-    try {
-      setLoading(true);
-      const result = await startFirstQueued();
-      console.log('Download started:', result);
-      // Refresh queue after starting to show updated status
-      await refreshQueue();
-    } catch (error) {
-      console.error('Failed to start download:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   return (
     <div>
       <h1>Queue</h1>
       <div style={{ marginBottom: '16px' }}>
         <button onClick={handleRefresh} disabled={loading}>
           {loading ? 'Loading...' : 'Refresh'}
-        </button>
-        <button 
-          onClick={handleStart}
-          disabled={loading || items.length === 0}
-          style={{ 
-            marginLeft: '10px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '3px',
-            padding: '4px 8px',
-            cursor: loading || items.length === 0 ? 'not-allowed' : 'pointer'
-          }}
-        >
-          Start
         </button>
       </div>
       
