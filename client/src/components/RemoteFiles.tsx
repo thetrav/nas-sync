@@ -45,7 +45,7 @@ export function RemoteFiles({ localPath, refreshQueue }: RemoteFilesProps) {
 
   const handleEnqueue = async (entry: FileEntry, localPath: string) => {
     try {
-      const result = await enqueueFile({remote_path: entry.fullPath, local_path: `${localPath}/${entry.name}`, size: entry.size});
+      const result = await enqueueFile({remote_path: entry.fullPath, local_path: `${localPath}/${entry.name}`, size: entry.size!});
       if (result) {
         console.log('File enqueued successfully:', result);
         // Refresh queue after successful enqueue

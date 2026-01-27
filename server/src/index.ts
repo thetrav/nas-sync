@@ -1,11 +1,7 @@
 import { listSonarr } from "./listSonarr";
 import { SFTP } from "./sftp";
 import { listLocal, createLocalFolder } from "./localFileSystem";
-import {
-  queueList,
-  queueEnqueue,
-  removeFromQueue
-} from "./queue";
+import { queueList, queueEnqueue, removeFromQueue } from "./queue";
 import { dbHandler } from "./requestHandlers";
 import { deleteCron, getCron, setCron } from "./cron";
 const port = Number(process.env.PORT) || 3000;
@@ -15,28 +11,30 @@ const sftp = new SFTP();
 Bun.serve({
   port,
   routes: {
-    "/tv": listSonarr,
-    "/sftp": dbHandler((req) => sftp.listSftp(req)),
-    "/local": dbHandler(listLocal),
-    "/local/create": dbHandler(createLocalFolder),
-    "/queue": {
+    "/api/tv": listSonarr,
+    "/api/sftp": dbHandler((req) => sftp.listSftp(req)),
+    "/api/local": dbHandler(listLocal),
+    "/api/local/create": dbHandler(createLocalFolder),
+    "/api/queue": {
       GET: dbHandler(queueList),
       POST: dbHandler(queueEnqueue),
     },
-    "/queue/:id": {
+    "/api/queue/:id": {
       DELETE: dbHandler((req) => {
         const id = Number(req.params.id);
         return removeFromQueue(id);
       }),
     },
-    "/cron": {
+    "/api/cron": {
       GET: dbHandler(getCron),
       POST: dbHandler(setCron),
-      DELETE: dbHandler(deleteCron)
-    }
+      DELETE: dbHandler(deleteCron),
+    },
   },
-  fetch() {
-    return new Response("Not Found", { status: 404 });
+  fetch(req) {
+    const path = new URL(req.url).pathname;
+    const file = Bun.file(`./ui${path == "/" ? "/index.html" : path}`);
+    return new Response(file);
   },
 });
 
