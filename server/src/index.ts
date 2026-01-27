@@ -1,17 +1,15 @@
-import { listSonarr } from "./listSonarr";
 import { SFTP } from "./sftp";
 import { listLocal, createLocalFolder } from "./localFileSystem";
 import { queueList, queueEnqueue, removeFromQueue } from "./queue";
 import { dbHandler } from "./requestHandlers";
-import { deleteCron, getCron, setCron } from "./cron";
+import { init } from "./db";
 const port = Number(process.env.PORT) || 3000;
 
 const sftp = new SFTP();
-
+init();
 Bun.serve({
   port,
   routes: {
-    "/api/tv": listSonarr,
     "/api/sftp": dbHandler((req) => sftp.listSftp(req)),
     "/api/local": dbHandler(listLocal),
     "/api/local/create": dbHandler(createLocalFolder),
@@ -25,14 +23,13 @@ Bun.serve({
         return removeFromQueue(id);
       }),
     },
-    "/api/cron": {
-      GET: dbHandler(getCron),
-      POST: dbHandler(setCron),
-      DELETE: dbHandler(deleteCron),
-    },
   },
   fetch(req) {
     const path = new URL(req.url).pathname;
+    if(path.startsWith("/api")) {
+      console.log("API miss", path)
+      return new Response(null, {status: 404});
+    }
     const file = Bun.file(`./ui${path == "/" ? "/index.html" : path}`);
     return new Response(file);
   },

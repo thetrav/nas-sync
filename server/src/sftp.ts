@@ -94,7 +94,6 @@ export class SFTP {
 
   async downloadFile(job: DownloadJob, progressFn: (transferred: number) => unknown ): Promise<void> {
     const client = new Client();
-    
     try {
       await client.connect(config);
       

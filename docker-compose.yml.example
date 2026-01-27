@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  api:
+    image: docker.io/thetrav/nas-sync
+    container_name: nas_sync_api
+    command: bun run ./src/index.ts
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - queue-data:/data
+      - /home/username/filestore:/home/username/filestore
+      - /home/username/.ssh:/home/username/.ssh:ro
+    environment:
+      QUEUE_DB_PATH: /data/queue.sqlite
+    restart: unless-stopped
+
+  worker:
+    image: docker.io/thetrav/nas-sync
+    container_name: nas_sync_worker
+    command: bun run ./src/processQueue.ts
+    env_file:
+      - .env
+    volumes:
+      - queue-data:/data
+      - /home/username/filestore:/home/username/filestore
+      - /home/username/.ssh:/home/username/.ssh:ro
+    environment:
+      QUEUE_DB_PATH: /data/queue.sqlite
+    restart: unless-stopped
+
+volumes:
+  queue-data:

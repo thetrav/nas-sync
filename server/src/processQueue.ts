@@ -1,4 +1,5 @@
-import { withDb } from "./db";
+import { sleep } from "bun";
+import { init, withDb } from "./db";
 import { formatBytes } from "./fileListing";
 import { DownloadJob } from "./queue";
 import { SFTP } from "./sftp";
@@ -12,9 +13,9 @@ async function updateJob(job: DownloadJob) {
   return withDb(null, async () => job.update());
 }
 
-async function processQueue() {
+async function processQueueOnce() {
   const jobs = await allJobs();
-  console.log(`${jobs.length} Jobs`)
+  console.log(`${new Date().toISOString()} ${jobs.length} Jobs`)
   for (const job of jobs) {
     if (job.status === "queued") {
       console.log(`SCP: ${job.remote_path} to ${job.local_path}`);
@@ -23,28 +24,36 @@ async function processQueue() {
       
       const sftp = new SFTP();
       try {
+        let lastUpdate = new Date().getTime();
         await sftp.downloadFile(job, (transferred) => {
-          job.completed = formatBytes(transferred);
-          updateJob(job);
+          const now = new Date().getTime();
+          if(now - lastUpdate > 1000) {
+            job.completed = formatBytes(transferred);
+            updateJob(job);
+            lastUpdate = now;
+          }
         });
         job.status = "completed";
         updateJob(job);
-        process.exit(0)
+        return
       } catch (error) {
         console.error(`Download failed for job ${job.id}:`, error);
         job.status = "failed";
         updateJob(job);
-        process.exit(1)
+        return
       }
     } else if (job.status === "downloading") {
       console.log(`already running`);
-      process.exit(0);
+      return
     } else {
         console.log(`skipping status ${job.status}`)
     }
   }
   console.log("Nothing left in queue")
-  process.exit(0)
 }
 
-processQueue().catch(console.error);
+init();
+while (true) {
+  await processQueueOnce();
+  await sleep(1_000);
+}

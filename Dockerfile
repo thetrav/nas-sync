@@ -1,7 +1,7 @@
 # ========================
 # Stage 1: deps + build
 # ========================
-FROM oven/bun:1.1.0 AS builder
+FROM oven/bun:1.3.6 AS builder
 
 # Bun freezes installs when CI=true — disable it
 ENV CI=false
@@ -24,7 +24,7 @@ COPY server ./
 # ========================
 # Stage 2: runtime
 # ========================
-FROM oven/bun:1.1.0
+FROM oven/bun:1.3.6
 
 WORKDIR /app/server
 COPY --from=builder /app/server /app/server

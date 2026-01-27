@@ -1,11 +1,13 @@
 import { Database } from "bun:sqlite";
 
-export let connection:Database | null
-
+export let connection:Database
+const dbPath = process.env.QUEUE_DB_PATH ?? "queue.sqlite"
 
 export function init() {
-  connection = new Database("mydb.sqlite", { create: true });
+  connection = new Database(dbPath, { create: true });
 
+  connection.run(`PRAGMA journal_mode = WAL`);
+  connection.run(`PRAGMA busy_timeout = 5000`);
   connection.query(
     `create table if not exists download_queue (
       id integer primary key,
@@ -20,9 +22,6 @@ export function init() {
       completed text
     );`,
   ).run();
-  connection.run(`PRAGMA journal_mode = WAL`);
-  connection.run(`PRAGMA busy_timeout = 5000`);
-  connection.close();
 }
 
 export function db() {
@@ -30,8 +29,10 @@ export function db() {
 }
 
 export async function withDb<I, T>(i: I, f: (args: I) => Promise<T>) {
-  connection = new Database("mydb.sqlite", { create: true });
+  init();
   try {
+    connection.run(`PRAGMA journal_mode = WAL`);
+    connection.run(`PRAGMA busy_timeout = 5000`);
   return await f(i);
    } finally {
     connection.close();
