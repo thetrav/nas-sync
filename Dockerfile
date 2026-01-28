@@ -1,19 +1,13 @@
-FROM node:24-bookworm-slim AS runtime
-
-ENV CI=false
+# Stage 1: builder
+FROM node:25-bookworm AS builder
 WORKDIR /app/server
-
-# Native deps if needed
-RUN apt-get update && \
-  apt-get install -y --no-install-recommends \
-  build-essential \
-  python3 && \
-  rm -rf /var/lib/apt/lists/*
-
 COPY server/package.json ./
-RUN rm -f package-lock.json && npm install
-
+RUN npm install
 COPY server ./
 
-EXPOSE 3000
+# Stage 2: runtime
+FROM node:25-bookworm-slim
+WORKDIR /app/server
+COPY --from=builder /app/server ./
 CMD ["node", "src/index.ts"]
+
