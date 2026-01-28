@@ -1,8 +1,11 @@
-import { sleep } from "bun";
 import { init, withDb } from "./db";
 import { formatBytes } from "./fileListing";
 import { DownloadJob } from "./queue";
 import { SFTP } from "./sftp";
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 async function allJobs(): Promise<DownloadJob[]> {

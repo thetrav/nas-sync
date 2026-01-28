@@ -1,3 +1,6 @@
 *.sqlite
 .env
 docker-compose.yml
+node_modules/
+package-lock.json
+deploy.sh

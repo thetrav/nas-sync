@@ -2,12 +2,14 @@ import { readdir, stat, mkdir } from "fs/promises";
 import { join } from "path";
 import { ServerError } from "./ServerError";
 import { formatBytes } from "./fileListing";
+import { Request } from "express";
 
 // Store current local directory path in memory
 let currentLocalPath = process.env.LOCAL_ROOT ?? "/tmp";
 
 export async function listLocal(req: Request) {
-  const url = new URL(req.url);
+  console.log("listing", req.url)
+  const url = new URL(`http://localhost${req.url}`);
   const pathParam = url.searchParams.get("path");
 
   // Handle navigation requests
@@ -57,20 +59,20 @@ export async function listLocal(req: Request) {
   };
 }
 
-export async function createLocalFolder(req: Request) {
-  const formData = await req.formData();
-  const folderName = formData.get("foldername") as string;
+// export async function createLocalFolder(req: Request) {
+//   const formData = await req.formData();
+//   const folderName = formData.get("foldername") as string;
 
-  if (!folderName) {
-    throw new ServerError("Folder name is required", 400);
-  }
+//   if (!folderName) {
+//     throw new ServerError("Folder name is required", 400);
+//   }
 
-  const newPath = join(currentLocalPath, folderName);
-  await mkdir(newPath);
+//   const newPath = join(currentLocalPath, folderName);
+//   await mkdir(newPath);
 
-  return {
-    success: true,
-    message: `Folder '${folderName}' created successfully`,
-    path: newPath,
-  };
-}
+//   return {
+//     success: true,
+//     message: `Folder '${folderName}' created successfully`,
+//     path: newPath,
+//   };
+// }

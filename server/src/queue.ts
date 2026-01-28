@@ -1,6 +1,6 @@
 import type { QueueItem, QueueResponse, QueueItemCreate } from '@shared/types';
 import {db} from "./db";
-import { BunRequest } from 'bun';
+import { Request } from 'express';
 import { ServerError } from './ServerError';
 
 const table = "download_queue";
@@ -33,72 +33,56 @@ export class DownloadJob implements QueueItem {
     this.completed = obj.completed;
   }
 
-  static create(obj: {remote_path: string, local_path: string, size: number}) {
-    const {position} = db().query(`SELECT MAX(position) as position FROM ${table};`).get() as {position: number};
-    db().query(`insert into ${table} (position, remote_path, local_path, status, created_at, started_at, completed_at, size, completed) 
-        values ($position, $remote_path, $local_path, $status, $created_at, $started_at, $completed_at, $size, $completed)`).run(
-            {
-                $position: position,
-                $remote_path: obj.remote_path,
-                $local_path: obj.local_path,
-                $status: 'queued',
-                $created_at: new Date().toISOString(),
-                $started_at: null,
-                $completed_at: null,
-                $size: obj.size,
-                $completed: null
-            }
+  static async create(obj: {remote_path: string, local_path: string, size: number}) {
+    const result = await db().get(`SELECT MAX(position) as position FROM ${table};`) as {position: number} | undefined;
+    const position = result?.position || 0;
+    await db().run(`insert into ${table} (position, remote_path, local_path, status, created_at, started_at, completed_at, size, completed) 
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            position,
+            obj.remote_path,
+            obj.local_path,
+            'queued',
+            new Date().toISOString(),
+            null,
+            null,
+            obj.size,
+            null
         );
   }
 
-    static all() {
-      return db()
-        .query(`${select} order by position asc`)
-        .as(DownloadJob)
-        .all();
+    static async all() {
+      const rows = await db().all(`${select} order by position asc`);
+      return rows.map(row => new DownloadJob(row as QueueItem));
     }
 
-    static get(id: number) {
-        return db()
-        .query(
-            `${select} where id = $id`,
-        )
-        .as(DownloadJob)
-        .get({ $id: id });
+    static async get(id: number) {
+        const row = await db().get(`${select} where id = ?`, id);
+        return row ? new DownloadJob(row as QueueItem) : null;
     }
 
-    static findByPath(remote_path: string, local_path: string) {
-      return db()
-        .query(
-            `${select} where remote_path = $remote_path and local_path = $local_path`,
-        )
-        .as(DownloadJob)
-        .get({ $remote_path: remote_path, $local_path: local_path });
+    static async findByPath(remote_path: string, local_path: string) {
+      const row = await db().get(`${select} where remote_path = ? and local_path = ?`, remote_path, local_path);
+      return row ? new DownloadJob(row as QueueItem) : null;
     }
 
-    update() {
-        const updateFields = columns.map(c => `${c} = $${c}`).join(", ")
-        const params: Record<string, any> = {};
-        columns.forEach((key) => {
-            params[`$${key}`] = this[key];
-        })
-        const up = db().prepare(
-        `update ${table} set ${updateFields} where id = $id`,
-        )
-        db().transaction(p => up.run(p))(params);
+    async update() {
+        const updateFields = columns.map(c => `${c} = ?`).join(", ")
+        const values = columns.map(key => this[key]);
+        await db().run(`update ${table} set ${updateFields} where id = ?`, ...values, this.id);
     }
 
-    remove() {
-        db().query(
-        `update ${table} set position = position - 1 where position > (select position from ${table} where id = $id)`,
-        ).run({ $id: this.id });
-        db().query(`delete from ${table} where id = $id`).run({ $id: this.id });
+    async remove() {
+        await db().run(
+        `update ${table} set position = position - 1 where position > (select position from ${table} where id = ?)`,
+        this.id
+        );
+        await db().run(`delete from ${table} where id = ?`, this.id);
     }
 }
 
 
-export function queueList(): QueueResponse {
-  const items = DownloadJob.all();
+export async function queueList(): Promise<QueueResponse> {
+  const items = await DownloadJob.all();
 
   return {
     items: items,
@@ -106,8 +90,8 @@ export function queueList(): QueueResponse {
   };
 }
 
-export async function queueEnqueue(req: BunRequest) {
-  const form = (await req.json()) as QueueItemCreate;
+export async function queueEnqueue(req: Request) {
+  const form = req.body as QueueItemCreate;
   const remotePath = form.remote_path;
   const localPath = form.local_path;
 
@@ -116,16 +100,19 @@ export async function queueEnqueue(req: BunRequest) {
   }
 
   // Check if already in queue
-  const existing = DownloadJob.findByPath(remotePath, localPath);
+  const existing = await DownloadJob.findByPath(remotePath, localPath);
   if (existing) {
     return existing;
   }
 
-  DownloadJob.create(form);
-  return DownloadJob.findByPath(remotePath, localPath);
+  await DownloadJob.create(form);
+  return await DownloadJob.findByPath(remotePath, localPath);
 }
 
-export function removeFromQueue(id: number) {
-    DownloadJob.get(id)?.remove();
+export async function removeFromQueue(id: number) {
+    const job = await DownloadJob.get(id);
+    if (job) {
+        await job.remove();
+    }
     return { success: true };
 }

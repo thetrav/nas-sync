@@ -1,40 +1,32 @@
 import { withDb } from "./db";
 import { ServerError } from "./ServerError";
-import { BunRequest } from "bun";
+import { Request, Response } from "express";
 
-export type RequestHandler = (req:BunRequest) => Promise<Response>
-export type AppHandler<T> = (req: BunRequest) => T | Promise<T>;
+export type RequestHandler = (req: Request, res: Response) => Promise<void>
+export type AppHandler<T> = (req: Request) => T | Promise<T>;
 
 export function dbHandler<T extends object>(handler: AppHandler<T>): RequestHandler {
-  return async (req: BunRequest): Promise<Response> => {
-    return withDb(req, jsonHandler(handler));
+  return async (req: Request, res: Response): Promise<void> => {
+    return withDb(req, jsonHandler(handler, res));
   }
 }
 
-export function jsonHandler<T extends object>(handler: AppHandler<T>) {
-  return async (req: BunRequest): Promise<Response> => {
+export function jsonHandler<T extends object>(handler: AppHandler<T>, res: Response) {
+  return async (req: Request): Promise<void> => {
     try {
       const result = await handler(req);
-      return new Response(JSON.stringify(result), {
-        headers: { "Content-Type": "application/json" },
-      });
+      res.json(result);
     } catch (error) {
       if (error instanceof ServerError) {
-        return new Response(JSON.stringify({
+        res.status(error.statusCode).json({
           error: error.message
-        }), {
-          status: error.statusCode,
-          headers: { "Content-Type": "application/json" },
         });
       } else {
         // Log unexpected errors
         console.error("Unexpected error:", error);
         
-        return new Response(JSON.stringify({
+        res.status(500).json({
           error: "Internal server error"
-        }), {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
         });
       }
     }

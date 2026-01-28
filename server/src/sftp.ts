@@ -1,17 +1,18 @@
-import { $ } from "bun";
 import { formatBytes } from "./fileListing";
 import { ServerError } from "./ServerError";
-import { FileEntry, FileListingResponse } from "@shared/types";
 import { DownloadJob } from "./queue";
 import { readFileSync } from 'node:fs';
 let currentPath = process.env.REMOTE_ROOT ?? "/";
 import Client from 'ssh2-sftp-client';
+import path from "node:path";
+import { run } from "./cmd";
+import { FileEntry, FileListingResponse } from "@shared/types";
 
 const config = {
   host: process.env.SERVER_URL,
   port: 22,
   username: process.env.USER_NAME,
-  privateKey: readFileSync(process.env.KEY_PATH!)
+  privateKey: process.env.KEY_PATH ? readFileSync(process.env.KEY_PATH) : undefined
 }
 
 export class SFTP {
@@ -42,7 +43,7 @@ export class SFTP {
     }
 
     // Handle navigation requests
-    const url = new URL(req.url);
+    const url = new URL(`http://localhost${req.url}`);
     const pathParam = url.searchParams.get("path");
 
     if (pathParam) {
@@ -63,9 +64,11 @@ export class SFTP {
     const entries = await this.listFolderContents(currentPath);
 
     // Check queue status for each file
-    const entriesWithQueueStatus = entries.map((entry) => {
+    const entriesWithQueueStatus = [];
+    for(const entry of entries) {
       if (entry.isDirectory) {
-        return entry;
+        entriesWithQueueStatus.push(entry);
+        continue;
       }
 
       // Calculate corresponding local path
@@ -74,17 +77,17 @@ export class SFTP {
         process.env.REMOTE_ROOT || "/",
         "",
       );
-      const localPath = require("path").join(localBase, relativeRemotePath);
+      const localPath = path.join(localBase, relativeRemotePath);
       
       // Check if file is in queue
-      const queueItem = DownloadJob.findByPath(entry.fullPath, localPath);
+      const queueItem = await DownloadJob.findByPath(entry.fullPath, localPath);
       const queueStatus = queueItem?.status as 'queued' | 'downloading' | 'completed' | 'failed';
       
-      return {
+      entriesWithQueueStatus.push({
         ...entry,
         queueStatus: queueStatus || undefined
-      };
-    });
+      });
+    }
 
     return {
       currentPath,
@@ -97,9 +100,9 @@ export class SFTP {
     try {
       await client.connect(config);
       
-      const localDir = require("path").dirname(job.local_path);
-      await $`mkdir -p ${localDir}`;
-      
+      const localDir = path.dirname(job.local_path);
+      run(`mkdir -p ${localDir}`);
+      console.log("downloading")
       await client.fastGet(job.remote_path, job.local_path, {
         concurrency: parseInt(process.env.CONCURRENCY ?? '1'),
         step: progressFn

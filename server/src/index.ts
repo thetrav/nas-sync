@@ -1,38 +1,50 @@
+import express from 'express';
 import { SFTP } from "./sftp";
-import { listLocal, createLocalFolder } from "./localFileSystem";
+import { listLocal } from "./localFileSystem";
 import { queueList, queueEnqueue, removeFromQueue } from "./queue";
 import { dbHandler } from "./requestHandlers";
 import { init } from "./db";
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const port = Number(process.env.PORT) || 3000;
+const app = express();
 
 const sftp = new SFTP();
 init();
-Bun.serve({
-  port,
-  routes: {
-    "/api/sftp": dbHandler((req) => sftp.listSftp(req)),
-    "/api/local": dbHandler(listLocal),
-    "/api/local/create": dbHandler(createLocalFolder),
-    "/api/queue": {
-      GET: dbHandler(queueList),
-      POST: dbHandler(queueEnqueue),
-    },
-    "/api/queue/:id": {
-      DELETE: dbHandler((req) => {
-        const id = Number(req.params.id);
-        return removeFromQueue(id);
-      }),
-    },
-  },
-  fetch(req) {
-    const path = new URL(req.url).pathname;
-    if(path.startsWith("/api")) {
-      console.log("API miss", path)
-      return new Response(null, {status: 404});
-    }
-    const file = Bun.file(`./ui${path == "/" ? "/index.html" : path}`);
-    return new Response(file);
-  },
+
+const api = express.Router();
+
+api.use(express.json());
+
+// API routes (must come before static files)
+api.get('/sftp', dbHandler((req) => sftp.listSftp(req)));
+api.get('/local', dbHandler(listLocal));
+// api.post('/local/create', dbHandler(createLocalFolder));
+api.get('/queue', dbHandler(queueList));
+api.post('/queue', dbHandler(queueEnqueue));
+api.delete('/queue/:id', dbHandler((req) => {
+  const id = Number(req.params.id);
+  return removeFromQueue(id);
+}));
+
+// Handle API miss
+api.use('/api/*', (req, res) => {
+  console.log("API miss", req.path);
+  res.status(404).send();
 });
 
-console.log(`Server running on http://localhost:${port}`);
+app.use("/api", api);
+// Serve static files from ui directory
+app.use(express.static(path.join(__dirname, 'ui')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'index.html'));
+});
+
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});

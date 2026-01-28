@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["bun-types"],
+    "types": ["node"],
     "paths": {
       "@shared/types": ["../shared/types"]
-    }
+    },
+    "outDir": "./dist"
   },
   "include": ["src"]
 }

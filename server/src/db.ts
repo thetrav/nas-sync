@@ -1,14 +1,18 @@
-import { Database } from "bun:sqlite";
+import sqlite3 from 'sqlite3';
+import { open, Database } from 'sqlite';
 
-export let connection:Database
+export let connection: Database | null = null;
 const dbPath = process.env.QUEUE_DB_PATH ?? "queue.sqlite"
 
-export function init() {
-  connection = new Database(dbPath, { create: true });
+export async function init() {
+  connection = await open({
+    filename: dbPath,
+    driver: sqlite3.Database
+  });
 
-  connection.run(`PRAGMA journal_mode = WAL`);
-  connection.run(`PRAGMA busy_timeout = 5000`);
-  connection.query(
+  await connection.exec(`PRAGMA journal_mode = WAL`);
+  await connection.exec(`PRAGMA busy_timeout = 5000`);
+  await connection.exec(
     `create table if not exists download_queue (
       id integer primary key,
       position integer,
@@ -20,21 +24,25 @@ export function init() {
       completed_at datetime,
       size string,
       completed text
-    );`,
-  ).run();
+    );`
+  );
 }
 
 export function db() {
-  return connection!;
+  if (!connection) {
+    throw new Error('Database not initialized. Call init() first.');
+  }
+  return connection;
 }
 
 export async function withDb<I, T>(i: I, f: (args: I) => Promise<T>) {
-  init();
+  await init();
   try {
-    connection.run(`PRAGMA journal_mode = WAL`);
-    connection.run(`PRAGMA busy_timeout = 5000`);
-  return await f(i);
-   } finally {
-    connection.close();
-   }
+    await connection!.exec(`PRAGMA journal_mode = WAL`);
+    await connection!.exec(`PRAGMA busy_timeout = 5000`);
+    return await f(i);
+  } finally {
+    await connection!.close();
+    connection = null;
+  }
 }

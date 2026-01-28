@@ -1,4 +1,4 @@
-import { expect, test, describe } from "bun:test";
+import { expect, test, describe } from "node:test";
 import { SFTP } from "./sftp";
 
 const sftpOutput = `sftp> cd /pool/public
