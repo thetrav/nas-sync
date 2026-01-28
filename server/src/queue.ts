@@ -1,10 +1,27 @@
-import type { QueueItem, QueueResponse, QueueItemCreate } from '@shared/types';
-import {db} from "./db";
-import { Request } from 'express';
-import { ServerError } from './ServerError';
+import type {
+  QueueItem,
+  QueueResponse,
+  QueueItemCreate,
+} from "../../shared/types/index.ts";
+import { db } from "./db.ts";
+import express from "express";
+type Request = express.Request;
+
+import { ServerError } from "./ServerError.ts";
 
 const table = "download_queue";
-const columns = ['id', 'position', 'remote_path', 'local_path', 'status', 'created_at', 'started_at', 'completed_at', 'size', 'completed'];
+const columns = [
+  "id",
+  "position",
+  "remote_path",
+  "local_path",
+  "status",
+  "created_at",
+  "started_at",
+  "completed_at",
+  "size",
+  "completed",
+];
 
 const select = `select ${columns.join(",")} from ${table}`;
 
@@ -13,7 +30,7 @@ export class DownloadJob implements QueueItem {
   position: number;
   remote_path: string;
   local_path: string;
-  status: 'queued' | 'downloading' | 'completed' | 'failed';
+  status: "queued" | "downloading" | "completed" | "failed";
   created_at: string;
   started_at?: string;
   completed_at?: string;
@@ -33,53 +50,67 @@ export class DownloadJob implements QueueItem {
     this.completed = obj.completed;
   }
 
-  static async create(obj: {remote_path: string, local_path: string, size: number}) {
-    const result = await db().get(`SELECT MAX(position) as position FROM ${table};`) as {position: number} | undefined;
+  static async create(obj: {
+    remote_path: string;
+    local_path: string;
+    size: number;
+  }) {
+    const result = (await db().get(
+      `SELECT MAX(position) as position FROM ${table};`,
+    )) as { position: number } | undefined;
     const position = result?.position || 0;
-    await db().run(`insert into ${table} (position, remote_path, local_path, status, created_at, started_at, completed_at, size, completed) 
+    await db().run(
+      `insert into ${table} (position, remote_path, local_path, status, created_at, started_at, completed_at, size, completed) 
         values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            position,
-            obj.remote_path,
-            obj.local_path,
-            'queued',
-            new Date().toISOString(),
-            null,
-            null,
-            obj.size,
-            null
-        );
+      position,
+      obj.remote_path,
+      obj.local_path,
+      "queued",
+      new Date().toISOString(),
+      null,
+      null,
+      obj.size,
+      null,
+    );
   }
 
-    static async all() {
-      const rows = await db().all(`${select} order by position asc`);
-      return rows.map(row => new DownloadJob(row as QueueItem));
-    }
+  static async all() {
+    const rows = await db().all(`${select} order by position asc`);
+    return rows.map((row) => new DownloadJob(row as QueueItem));
+  }
 
-    static async get(id: number) {
-        const row = await db().get(`${select} where id = ?`, id);
-        return row ? new DownloadJob(row as QueueItem) : null;
-    }
+  static async get(id: number) {
+    const row = await db().get(`${select} where id = ?`, id);
+    return row ? new DownloadJob(row as QueueItem) : null;
+  }
 
-    static async findByPath(remote_path: string, local_path: string) {
-      const row = await db().get(`${select} where remote_path = ? and local_path = ?`, remote_path, local_path);
-      return row ? new DownloadJob(row as QueueItem) : null;
-    }
+  static async findByPath(remote_path: string, local_path: string) {
+    const row = await db().get(
+      `${select} where remote_path = ? and local_path = ?`,
+      remote_path,
+      local_path,
+    );
+    return row ? new DownloadJob(row as QueueItem) : null;
+  }
 
-    async update() {
-        const updateFields = columns.map(c => `${c} = ?`).join(", ")
-        const values = columns.map(key => this[key]);
-        await db().run(`update ${table} set ${updateFields} where id = ?`, ...values, this.id);
-    }
+  async update() {
+    const updateFields = columns.map((c) => `${c} = ?`).join(", ");
+    const values = columns.map((key) => this[key]);
+    await db().run(
+      `update ${table} set ${updateFields} where id = ?`,
+      ...values,
+      this.id,
+    );
+  }
 
-    async remove() {
-        await db().run(
-        `update ${table} set position = position - 1 where position > (select position from ${table} where id = ?)`,
-        this.id
-        );
-        await db().run(`delete from ${table} where id = ?`, this.id);
-    }
+  async remove() {
+    await db().run(
+      `update ${table} set position = position - 1 where position > (select position from ${table} where id = ?)`,
+      this.id,
+    );
+    await db().run(`delete from ${table} where id = ?`, this.id);
+  }
 }
-
 
 export async function queueList(): Promise<QueueResponse> {
   const items = await DownloadJob.all();
@@ -110,9 +141,9 @@ export async function queueEnqueue(req: Request) {
 }
 
 export async function removeFromQueue(id: number) {
-    const job = await DownloadJob.get(id);
-    if (job) {
-        await job.remove();
-    }
-    return { success: true };
+  const job = await DownloadJob.get(id);
+  if (job) {
+    await job.remove();
+  }
+  return { success: true };
 }

@@ -1,33 +1,37 @@
-import { formatBytes } from "./fileListing";
-import { ServerError } from "./ServerError";
-import { DownloadJob } from "./queue";
-import { readFileSync } from 'node:fs';
+import { formatBytes } from "./fileListing.ts";
+import { ServerError } from "./ServerError.ts";
+import { DownloadJob } from "./queue.ts";
+import { readFileSync } from "node:fs";
 let currentPath = process.env.REMOTE_ROOT ?? "/";
-import Client from 'ssh2-sftp-client';
+import Client from "ssh2-sftp-client";
 import path from "node:path";
-import { run } from "./cmd";
-import { FileEntry, FileListingResponse } from "@shared/types";
+import { run } from "./cmd.ts";
+import type {
+  FileEntry,
+  FileListingResponse,
+} from "../../shared/types/index.ts";
 
 const config = {
   host: process.env.SERVER_URL,
   port: 22,
   username: process.env.USER_NAME,
-  privateKey: process.env.KEY_PATH ? readFileSync(process.env.KEY_PATH) : undefined
-}
+  privateKey: process.env.KEY_PATH
+    ? readFileSync(process.env.KEY_PATH)
+    : undefined,
+};
 
 export class SFTP {
-
   async listFolderContents(path: string): Promise<FileEntry[]> {
-    const client = new Client()
+    const client = new Client();
     try {
-      await client.connect(config)
+      await client.connect(config);
       const data = await client.list(path);
-      return data.map(fi => ({
+      return data.map((fi) => ({
         name: fi.name,
-        isDirectory: fi.type == 'd',
+        isDirectory: fi.type == "d",
         fullPath: `${path}/${fi.name}`,
-        size: formatBytes(fi.size)
-      }))
+        size: formatBytes(fi.size),
+      }));
     } catch (error) {
       throw new Error(`Failed to list directory ${path}: ${error}`);
     } finally {
@@ -65,7 +69,7 @@ export class SFTP {
 
     // Check queue status for each file
     const entriesWithQueueStatus = [];
-    for(const entry of entries) {
+    for (const entry of entries) {
       if (entry.isDirectory) {
         entriesWithQueueStatus.push(entry);
         continue;
@@ -78,14 +82,14 @@ export class SFTP {
         "",
       );
       const localPath = path.join(localBase, relativeRemotePath);
-      
+
       // Check if file is in queue
       const queueItem = await DownloadJob.findByPath(entry.fullPath, localPath);
-      const queueStatus = queueItem?.status as 'queued' | 'downloading' | 'completed' | 'failed';
-      
+      const queueStatus = queueItem?.status!;
+
       entriesWithQueueStatus.push({
         ...entry,
-        queueStatus: queueStatus || undefined
+        queueStatus: queueStatus || undefined,
       });
     }
 
@@ -95,20 +99,25 @@ export class SFTP {
     };
   }
 
-  async downloadFile(job: DownloadJob, progressFn: (transferred: number) => unknown ): Promise<void> {
+  async downloadFile(
+    job: DownloadJob,
+    progressFn: (transferred: number) => unknown,
+  ): Promise<void> {
     const client = new Client();
     try {
       await client.connect(config);
-      
+
       const localDir = path.dirname(job.local_path);
       run(`mkdir -p ${localDir}`);
-      console.log("downloading")
+      console.log("downloading");
       await client.fastGet(job.remote_path, job.local_path, {
-        concurrency: parseInt(process.env.CONCURRENCY ?? '1'),
-        step: progressFn
+        concurrency: parseInt(process.env.CONCURRENCY ?? "1"),
+        step: progressFn,
       });
     } catch (error) {
-      throw new Error(`Failed to download ${job.remote_path} to ${job.local_path}: ${error}`);
+      throw new Error(
+        `Failed to download ${job.remote_path} to ${job.local_path}: ${error}`,
+      );
     } finally {
       client.end();
     }

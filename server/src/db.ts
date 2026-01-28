@@ -1,13 +1,13 @@
-import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
+import sqlite3 from "sqlite3";
+import { open, Database } from "sqlite";
 
-export let connection: Database | null = null;
-const dbPath = process.env.QUEUE_DB_PATH ?? "queue.sqlite"
+export let connection: Database;
+const dbPath = process.env.QUEUE_DB_PATH ?? "queue.sqlite";
 
 export async function init() {
   connection = await open({
     filename: dbPath,
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
 
   await connection.exec(`PRAGMA journal_mode = WAL`);
@@ -24,13 +24,13 @@ export async function init() {
       completed_at datetime,
       size string,
       completed text
-    );`
+    );`,
   );
 }
 
 export function db() {
   if (!connection) {
-    throw new Error('Database not initialized. Call init() first.');
+    throw new Error("Database not initialized. Call init() first.");
   }
   return connection;
 }

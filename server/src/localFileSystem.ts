@@ -1,14 +1,14 @@
-import { readdir, stat, mkdir } from "fs/promises";
+import { readdir, stat } from "fs/promises";
 import { join } from "path";
-import { ServerError } from "./ServerError";
-import { formatBytes } from "./fileListing";
-import { Request } from "express";
+import { formatBytes } from "./fileListing.ts";
+import express from "express";
+type Request = express.Request;
 
 // Store current local directory path in memory
 let currentLocalPath = process.env.LOCAL_ROOT ?? "/tmp";
 
 export async function listLocal(req: Request) {
-  console.log("listing", req.url)
+  console.log("listing", req.url);
   const url = new URL(`http://localhost${req.url}`);
   const pathParam = url.searchParams.get("path");
 
@@ -42,12 +42,12 @@ export async function listLocal(req: Request) {
       const fullPath = join(currentLocalPath, entry.name);
       const stats = await stat(fullPath);
       const size = entry.isDirectory() ? "" : formatBytes(stats.size);
-      
+
       return {
         name: entry.name,
         isDirectory: entry.isDirectory(),
         fullPath: fullPath,
-        size: size
+        size: size,
       };
     }),
   );

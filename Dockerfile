@@ -1,33 +1,19 @@
-# ========================
-# Stage 1: deps + build
-# ========================
-FROM oven/bun:1.3.6 AS builder
+FROM node:24-bookworm-slim AS runtime
 
-# Bun freezes installs when CI=true — disable it
 ENV CI=false
+WORKDIR /app/server
 
+# Native deps if needed
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   build-essential \
   python3 && \
   rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app/server
-
 COPY server/package.json ./
-
-# You don't care about lockfiles
-RUN rm -f bun.lockb && bun install
+RUN rm -f package-lock.json && npm install
 
 COPY server ./
 
-# ========================
-# Stage 2: runtime
-# ========================
-FROM oven/bun:1.3.6
-
-WORKDIR /app/server
-COPY --from=builder /app/server /app/server
-
 EXPOSE 3000
-CMD ["bun", "run", "./src/index.ts"]
+CMD ["node", "src/index.ts"]

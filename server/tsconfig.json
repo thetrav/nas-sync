@@ -1,16 +1,12 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node"],
-    "paths": {
-      "@shared/types": ["../shared/types"]
-    },
-    "outDir": "./dist"
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
   },
   "include": ["src"]
 }
