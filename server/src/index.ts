@@ -45,7 +45,7 @@ api.use("/api/*", (req, res) => {
 
 app.use("/api", api);
 // Serve static files from ui directory
-app.use(express.static(path.join(__dirname, "ui")));
+app.use(express.static(path.join(__dirname, "../ui")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "ui", "index.html"));

@@ -17,7 +17,6 @@ async function updateJob(job: DownloadJob) {
 
 async function processQueueOnce() {
   const jobs = await allJobs();
-  console.log(`${new Date().toISOString()} ${jobs.length} Jobs`);
   for (const job of jobs) {
     if (job.status === "queued") {
       console.log(`SCP: ${job.remote_path} to ${job.local_path}`);
@@ -47,11 +46,8 @@ async function processQueueOnce() {
     } else if (job.status === "downloading") {
       console.log(`already running`);
       return;
-    } else {
-      console.log(`skipping status ${job.status}`);
     }
   }
-  console.log("Nothing left in queue");
 }
 
 init();
