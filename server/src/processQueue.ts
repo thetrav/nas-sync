@@ -1,7 +1,7 @@
 import { init, withDb } from "./db.ts";
 import { formatBytes } from "./fileListing.ts";
 import { DownloadJob } from "./queue.ts";
-import { SFTP } from "./sftp.ts";
+import { downloadFile } from "./rsync.ts";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -23,10 +23,9 @@ async function processQueueOnce() {
       job.status = "downloading";
       updateJob(job);
 
-      const sftp = new SFTP();
       try {
         let lastUpdate = new Date().getTime();
-        await sftp.downloadFile(job, (transferred) => {
+        await downloadFile(job, (transferred) => {
           const now = new Date().getTime();
           if (now - lastUpdate > 1000) {
             job.completed = formatBytes(transferred);
