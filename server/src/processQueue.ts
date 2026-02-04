@@ -15,10 +15,14 @@ async function updateJob(job: DownloadJob) {
   return withDb(null, async () => job.update());
 }
 
+async function deleteJob(job: DownloadJob) {
+  return withDb(null, async () => job.remove());
+}
+
 async function processQueueOnce() {
   const jobs = await allJobs();
   for (const job of jobs) {
-    if (job.status === "queued") {
+    if (job.status === "queued" || job.status === "downloading") {
       console.log(`SCP: ${job.remote_path} to ${job.local_path}`);
       job.status = "downloading";
       updateJob(job);
@@ -34,17 +38,21 @@ async function processQueueOnce() {
           }
         });
         job.status = "completed";
+        job.completed_at = new Date().toISOString();
         updateJob(job);
         return;
       } catch (error) {
         console.error(`Download failed for job ${job.id}:`, error);
         job.status = "failed";
+        job.completed_at = new Date().toISOString();
         updateJob(job);
         return;
       }
-    } else if (job.status === "downloading") {
-      console.log(`already running`);
-      return;
+    } else if (job.status === "completed" || job.status == "failed" && job.completed_at) {
+      if(new Date(job.completed_at!).getMilliseconds() < (new Date().getMilliseconds() - 1000*60*60*24)) {
+        console.log(`removing old job ${job.remote_path} to ${job.local_path}`);
+        deleteJob(job);
+      }
     }
   }
 }
