@@ -8,50 +8,50 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function allJobs(): Promise<DownloadJob[]> {
-  return withDb(null, async () => DownloadJob.all());
+  return withDb(null, async () => await DownloadJob.all());
 }
 
 async function updateJob(job: DownloadJob) {
-  return withDb(null, async () => job.update());
+  return withDb(null, async () => await job.update());
 }
 
 async function deleteJob(job: DownloadJob) {
-  return withDb(null, async () => job.remove());
+  return withDb(null, async () => await job.remove());
 }
 
 async function processQueueOnce() {
   const jobs = await allJobs();
   for (const job of jobs) {
     if (job.status === "queued" || job.status === "downloading") {
-      console.log(`SCP: ${job.remote_path} to ${job.local_path}`);
+      console.log(`syncing: ${job.remote_path} to ${job.local_path}`);
       job.status = "downloading";
-      updateJob(job);
+      await updateJob(job);
 
       try {
         let lastUpdate = new Date().getTime();
-        await downloadFile(job, (transferred) => {
+        await downloadFile(job, async (transferred) => {
           const now = new Date().getTime();
           if (now - lastUpdate > 1000) {
             job.completed = formatBytes(transferred);
-            updateJob(job);
+            await updateJob(job);
             lastUpdate = now;
           }
         });
         job.status = "completed";
         job.completed_at = new Date().toISOString();
-        updateJob(job);
+        await updateJob(job);
         return;
       } catch (error) {
         console.error(`Download failed for job ${job.id}:`, error);
         job.status = "failed";
         job.completed_at = new Date().toISOString();
-        updateJob(job);
+        await updateJob(job);
         return;
       }
     } else if (job.status === "completed" || job.status == "failed" && job.completed_at) {
       if(new Date(job.completed_at!).getMilliseconds() < (new Date().getMilliseconds() - 1000*60*60*24)) {
         console.log(`removing old job ${job.remote_path} to ${job.local_path}`);
-        deleteJob(job);
+        await deleteJob(job);
       }
     }
   }

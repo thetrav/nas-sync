@@ -5,7 +5,7 @@ import { DownloadJob } from "./queue.ts";
 
 export async function downloadFile(
   job: DownloadJob,
-  progressFn: (transferred: number) => unknown,
+  progressFn: (transferred: number) => Promise<unknown>,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const localDir = path.dirname(job.local_path);
@@ -39,7 +39,7 @@ export async function downloadFile(
       stdio: ["ignore", "pipe", "pipe"],
     });
 
-    rsync.stdout.on("data", (data: Buffer) => {
+    rsync.stdout.on("data", async (data: Buffer) => {
       const now = Date.now();
       if (now - lastTick < 1000) return; // throttle to ~1s
       lastTick = now;
@@ -52,7 +52,7 @@ export async function downloadFile(
       const bytes = parseInt(match[1].replace(/,/g, ""), 10);
       if (bytes > lastReported) {
         lastReported = bytes;
-        progressFn(bytes);
+        await progressFn(bytes);
       }
     });
 
@@ -64,7 +64,7 @@ export async function downloadFile(
       reject(new Error(`Failed to start rsync: ${err.message}`));
     });
 
-    rsync.on("close", (code) => {
+    rsync.on("close", async (code) => {
       if (code !== 0) {
         reject(new Error(`rsync exited with code ${code}`));
         return;
@@ -73,7 +73,7 @@ export async function downloadFile(
       // Final size report
       if (existsSync(job.local_path)) {
         const finalSize = statSync(job.local_path).size;
-        progressFn(finalSize);
+        await progressFn(finalSize);
       }
 
       resolve();
