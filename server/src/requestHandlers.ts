@@ -9,7 +9,7 @@ export type AppHandler<I, O> = (params: I) => O | Promise<O>;
 export function get<I,O>(ah: AppHandler<I,O>): RequestHandler {
   return async (req: Request, res: Response): Promise<void> => {
     try {
-       const result = await ah(req.params as I);
+       const result = await ah({...req.params, ...req.query} as I);
        res.json(result);
     } catch (error) {
       if (error instanceof ServerError) {
