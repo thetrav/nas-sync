@@ -146,6 +146,14 @@ export async function list(params: {path: string}): Promise<FileListingResponse>
     });
   }
 
+  // Sort final entries: directories first, then files, case-insensitive
+  entriesWithQueueStatus.sort((a, b) => {
+    if (a.isDirectory !== b.isDirectory) {
+      return a.isDirectory ? -1 : 1;
+    }
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  });
+
   return {
     currentPath,
     entries: entriesWithQueueStatus,
