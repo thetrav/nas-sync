@@ -1,16 +1,13 @@
 import { readdir, stat } from "fs/promises";
 import { join } from "path";
 import { formatBytes } from "./fileListing.ts";
-import express from "express";
-type Request = express.Request;
 
 // Store current local directory path in memory
 let currentLocalPath = process.env.LOCAL_ROOT ?? "/tmp";
 
-export async function listLocal(req: Request) {
-  console.log("listing", req.url);
-  const url = new URL(`http://localhost${req.url}`);
-  const pathParam = url.searchParams.get("path");
+export async function listLocal(params: {path: string}) {
+  console.log("listing", params.path);
+  const pathParam = params.path;
 
   // Handle navigation requests
   if (pathParam) {

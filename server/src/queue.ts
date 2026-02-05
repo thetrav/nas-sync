@@ -3,9 +3,7 @@ import type {
   QueueResponse,
   QueueItemCreate,
 } from "../../shared/types/index.ts";
-import { db } from "./db.ts";
-import express from "express";
-type Request = express.Request;
+import { db, withDb } from "./db.ts";
 
 import { ServerError } from "./ServerError.ts";
 
@@ -53,7 +51,7 @@ export class DownloadJob implements QueueItem {
   static async create(obj: {
     remote_path: string;
     local_path: string;
-    size: number;
+    size: string;
   }) {
     const result = (await db().get(
       `SELECT MAX(position) as position FROM ${table};`,
@@ -113,7 +111,7 @@ export class DownloadJob implements QueueItem {
 }
 
 export async function queueList(): Promise<QueueResponse> {
-  const items = await DownloadJob.all();
+  const items = await withDb(null, () => DownloadJob.all());
 
   return {
     items: items,
@@ -121,29 +119,32 @@ export async function queueList(): Promise<QueueResponse> {
   };
 }
 
-export async function queueEnqueue(req: Request) {
-  const form = req.body as QueueItemCreate;
+export async function queueEnqueue(form: QueueItemCreate) {
+  console.log("enqueue", form);
   const remotePath = form.remote_path;
   const localPath = form.local_path;
 
   if (!remotePath || !localPath) {
     throw new ServerError("remote_path and local_path are required", 400);
   }
+  return await withDb(null, async () => {
+    // Check if already in queue
+    const existing =  await DownloadJob.findByPath(remotePath, localPath);
+    if (existing) {
+      return existing;
+    }
 
-  // Check if already in queue
-  const existing = await DownloadJob.findByPath(remotePath, localPath);
-  if (existing) {
-    return existing;
-  }
-
-  await DownloadJob.create(form);
-  return await DownloadJob.findByPath(remotePath, localPath);
+    await DownloadJob.create(form);
+    return await DownloadJob.findByPath(remotePath, localPath);
+  });
 }
 
-export async function removeFromQueue(id: number) {
-  const job = await DownloadJob.get(id);
+export async function removeFromQueue(params: {id: number}) {
+  return await withDb(null, async () => {
+  const job = await DownloadJob.get(params.id);
   if (job) {
     await job.remove();
   }
   return { success: true };
+  });  
 }

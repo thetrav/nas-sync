@@ -66,7 +66,7 @@ export async function getRemoteFiles(
   path?: string,
 ): Promise<FileListingResponse | undefined> {
   const params = path ? { path } : {};
-  return get<FileListingResponse>("/sftp", params);
+  return get<FileListingResponse>("/ssh", params);
 }
 
 export async function removeFromQueue(id: number): Promise<boolean> {

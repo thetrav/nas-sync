@@ -1,9 +1,9 @@
 {
-  "name": "bun-app",
+  "name": "nas-sync",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "set -a && source ../.env && set +a && tsx watch src/index.ts",
+    "dev": "set -a && source ../.env && set +a && node --watch src/index.ts",
     "start": "tsx src/index.ts",
     "build": "tsc",
     "lint": "eslint --fix .",
