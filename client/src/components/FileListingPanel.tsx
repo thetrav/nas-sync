@@ -148,7 +148,7 @@ export function FileListingPanel({
                 <div className="w-32 text-right text-muted-foreground text-xs">
                   {showEnqueue && file.queueStatus}
                 </div>
-                {showEnqueue && !file.isDirectory && (
+                {showEnqueue && !file.isDirectory && !["queued", "downloading"].includes(file.queueStatus) && (
                   <button
                     disabled={loading}
                     onClick={(e) => {

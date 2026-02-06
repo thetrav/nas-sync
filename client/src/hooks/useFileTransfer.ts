@@ -1,7 +1,8 @@
 import { useLocal } from "./useLocal";
 import { useRemote } from "./useRemote";
 import { useQueue } from "./useQueue";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
+import { QueueItemCreate } from "@shared/types";
 
 export function useFileTransfer() {
   const {
@@ -29,7 +30,7 @@ export function useFileTransfer() {
     transfers,
     setTransfers,
     refreshQueue,
-    enqueueFile,
+    enqueueFile: apiEnqueueFile,
     deleteTransfer,
     queueLoading,
     queueError
@@ -42,6 +43,18 @@ export function useFileTransfer() {
     refreshQueue();
   }, []);
 
+  const enqueueFile = useCallback(async (item: QueueItemCreate) => {
+    await apiEnqueueFile(item);
+    
+    // Update the remote file's queueStatus to queued
+    setRemoteFiles(prevFiles => 
+      prevFiles.map(file => 
+        file.fullPath === item.remote_path 
+          ? { ...file, queueStatus: 'queued' as const }
+          : file
+      )
+    );
+  }, [apiEnqueueFile, setRemoteFiles]);
 
   return {
     localPath,
