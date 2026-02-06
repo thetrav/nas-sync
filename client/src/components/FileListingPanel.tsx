@@ -54,16 +54,23 @@ export function FileListingPanel({
 }: FileListingPanelProps) {
   const IconComponent = icon === 'local' ? HardDrive : Cloud;
   const [clickedButtonIndex, setClickedButtonIndex] = useState<number | null>(null);
+  const [clickedBreadcrumbIndex, setClickedBreadcrumbIndex] = useState<number | null>(null);
+  const [clickedFolderIndex, setClickedFolderIndex] = useState<number | null>(null);
+  const [clickedFileIconIndex, setClickedFileIconIndex] = useState<number | null>(null);
   
   const pathParts = currentPath.split('/').filter(Boolean);
   
-  const handleFileClick = (file: FileEntry) => {
+  const handleFileClick = (file: FileEntry, index: number) => {
     if (file.isDirectory) {
+      setClickedFolderIndex(index);
+      setTimeout(() => setClickedFolderIndex(null), 200);
       onNavigate(filePath(currentPath, file.name));
     }
   };
   
   const handlePathClick = (index: number) => {
+    setClickedBreadcrumbIndex(index);
+    setTimeout(() => setClickedBreadcrumbIndex(null), 200);
     const newPath = '/' + pathParts.slice(0, index + 1).join('/');
     onNavigate(newPath);
   };
@@ -98,8 +105,9 @@ export function FileListingPanel({
               disabled={loading}
               onClick={() => handlePathClick(index)}
               className={cn(
-                "hover:text-foreground transition-colors font-mono",
-                index === pathParts.length - 1 ? 'text-foreground' : 'text-muted-foreground'
+                "hover:text-foreground transition-all font-mono",
+                index === pathParts.length - 1 ? 'text-foreground' : 'text-muted-foreground',
+                clickedBreadcrumbIndex === index && "scale-150 opacity-70"
               )}
             >
               {part}
@@ -130,13 +138,23 @@ export function FileListingPanel({
               <div
                 key={i}
                 className="file-row group"
-                onClick={() => !loading && handleFileClick(file)}
+                onClick={() => !loading && handleFileClick(file, i)}
               >
                 <div className="w-5 flex-shrink-0">
                   {file.isDirectory ? (
-                    <Folder className="w-4 h-4 text-folder" />
+                    <Folder 
+                      className={cn(
+                        "w-4 h-4 text-folder transition-all",
+                        clickedFolderIndex === i && "scale-150 opacity-70"
+                      )} 
+                    />
                   ) : (
-                    <File className="w-4 h-4 text-file" />
+                    <File 
+                      className={cn(
+                        "w-4 h-4 text-file transition-all",
+                        clickedFileIconIndex === i && "scale-150 opacity-70"
+                      )} 
+                    />
                   )}
                 </div>
                 <div className="flex-1 font-mono truncate" title={file.name}>
@@ -154,7 +172,11 @@ export function FileListingPanel({
                     onClick={(e) => {
                       e.stopPropagation();
                       setClickedButtonIndex(i);
-                      setTimeout(() => setClickedButtonIndex(null), 200);
+                      setClickedFileIconIndex(i);
+                      setTimeout(() => {
+                        setClickedButtonIndex(null);
+                        setClickedFileIconIndex(null);
+                      }, 200);
                       onEnqueue?.({
                         remote_path: filePath(remotePath, file.name),
                         local_path: filePath(localPath, file.name),
