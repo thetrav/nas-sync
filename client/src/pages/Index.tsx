@@ -5,14 +5,20 @@ import { useFileTransfer } from '@/hooks/useFileTransfer';
 const Index = () => {
   const {
     localPath,
-    remotePath,
     localFiles,
-    remoteFiles,
-    transfers,
+    localLoading,
+    localError,
     navigateLocal,
-    navigateRemote,
     refreshLocal,
+    remotePath,
+    remoteFiles,
+    remoteLoading,
+    remoteError,
+    navigateRemote,
     refreshRemote,
+    transfers,
+    queueLoading,
+    queueError,
     refreshQueue,
     enqueueFile,
     deleteTransfer,
@@ -42,6 +48,10 @@ const Index = () => {
             currentPath={localPath}
             onRefresh={refreshLocal}
             onNavigate={navigateLocal}
+            loading={localLoading}
+            error={localError}
+            localPath={localPath}
+            remotePath={remotePath}
           />
         </div>
 
@@ -55,7 +65,11 @@ const Index = () => {
             onRefresh={refreshRemote}
             onNavigate={navigateRemote}
             onEnqueue={enqueueFile}
+            loading={remoteLoading}
+            error={remoteError}
             showEnqueue
+            localPath={localPath}
+            remotePath={remotePath}
           />
         </div>
       </div>
@@ -66,6 +80,8 @@ const Index = () => {
           items={transfers}
           onDelete={deleteTransfer}
           onRefresh={refreshQueue}
+          loading={queueLoading}
+          error={queueError}
         />
       </div>
     </div>

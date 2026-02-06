@@ -1,24 +1,20 @@
 import { RefreshCw, Folder, File, ChevronRight, Plus, HardDrive, Cloud } from 'lucide-react';
-import { FileItem } from '@/types/files';
+import { FileEntry, QueueItemCreate } from "@shared/types";
 import { cn } from '@/lib/utils';
 
 interface FileListingPanelProps {
   title: string;
   icon: 'local' | 'remote';
-  files: FileItem[];
+  files: FileEntry[];
   currentPath: string;
   onRefresh: () => void;
   onNavigate: (path: string) => void;
-  onEnqueue?: (file: FileItem) => void;
+  onEnqueue?: (item: QueueItemCreate) => void;
   showEnqueue?: boolean;
-}
-
-function formatSize(bytes?: number): string {
-  if (bytes === undefined) return '—';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  loading: boolean;
+  error: string;
+  localPath: string;
+  remotePath: string;
 }
 
 function formatDate(date?: Date): string {
@@ -40,14 +36,18 @@ export function FileListingPanel({
   onNavigate,
   onEnqueue,
   showEnqueue = false,
+  loading,
+  error,
+  localPath,
+  remotePath
 }: FileListingPanelProps) {
   const IconComponent = icon === 'local' ? HardDrive : Cloud;
   
   const pathParts = currentPath.split('/').filter(Boolean);
   
-  const handleFileClick = (file: FileItem) => {
-    if (file.type === 'folder') {
-      onNavigate(file.path);
+  const handleFileClick = (file: FileEntry) => {
+    if (file.isDirectory) {
+      onNavigate(`${currentPath}${file.name}`);
     }
   };
   
@@ -63,7 +63,7 @@ export function FileListingPanel({
           <IconComponent className={cn("w-4 h-4", icon === 'local' ? 'text-folder' : 'text-primary')} />
           <h2 className="panel-title">{title}</h2>
         </div>
-        <button onClick={onRefresh} className="icon-button" title="Refresh">
+        <button onClick={onRefresh} className="icon-button" title="Refresh" disabled={!loading}>
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
@@ -71,6 +71,7 @@ export function FileListingPanel({
       {/* Breadcrumb path */}
       <div className="px-4 py-2 bg-secondary/50 border-b border-panel-border flex items-center gap-1 text-sm overflow-x-auto scrollbar-thin">
         <button
+          disabled={!loading}
           onClick={() => onNavigate('/')}
           className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
         >
@@ -80,6 +81,7 @@ export function FileListingPanel({
           <span key={index} className="flex items-center gap-1 flex-shrink-0">
             <ChevronRight className="w-3 h-3 text-muted-foreground" />
             <button
+              disabled={!loading}
               onClick={() => handlePathClick(index)}
               className={cn(
                 "hover:text-foreground transition-colors font-mono",
@@ -110,14 +112,14 @@ export function FileListingPanel({
             </div>
             
             {/* Files */}
-            {files.map((file) => (
+            {files.map((file, i) => (
               <div
-                key={file.id}
+                key={i}
                 className="file-row group"
-                onClick={() => handleFileClick(file)}
+                onClick={() => !loading && handleFileClick(file)}
               >
                 <div className="w-5 flex-shrink-0">
-                  {file.type === 'folder' ? (
+                  {file.isDirectory ? (
                     <Folder className="w-4 h-4 text-folder" />
                   ) : (
                     <File className="w-4 h-4 text-file" />
@@ -127,16 +129,21 @@ export function FileListingPanel({
                   {file.name}
                 </div>
                 <div className="w-24 text-right text-muted-foreground text-xs">
-                  {file.type === 'folder' ? '—' : formatSize(file.size)}
+                  {file.isDirectory ? '—' : file.size}
                 </div>
                 <div className="w-32 text-right text-muted-foreground text-xs">
-                  {formatDate(file.modified)}
+                  {showEnqueue && file.queueStatus}
                 </div>
-                {showEnqueue && file.type === 'file' && (
+                {showEnqueue && !file.isDirectory && (
                   <button
+                    disabled={!loading}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onEnqueue?.(file);
+                      onEnqueue?.({
+                        remote_path: remotePath,
+                        local_path: localPath,
+                        size: file.size
+                      });
                     }}
                     className="enqueue-button opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Add to queue"
@@ -144,7 +151,7 @@ export function FileListingPanel({
                     <Plus className="w-3 h-3" />
                   </button>
                 )}
-                {showEnqueue && file.type === 'folder' && <div className="w-8" />}
+                {showEnqueue && file.isDirectory && <div className="w-8" />}
               </div>
             ))}
           </div>

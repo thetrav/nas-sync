@@ -1,42 +1,27 @@
-import { useState } from 'react';
-import { getQueue } from './Api';
-import { Queue } from './components/Queue';
-import { LocalFiles } from './components/LocalFiles';
-import { RemoteFiles } from './components/RemoteFiles';
-import type { QueueItem } from '@shared/types';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
 
-function App() {
-  const [localPath, setLocalPath] = useState<string>('');
-  const [items, setItems] = useState<QueueItem[]>([]);
-  
-  const refreshQueue = async () => {
-    try {
-      const response = await getQueue();
-      setItems(response?.items ?? []);
-    } catch (error) {
-      console.error('Failed to refresh queue:', error);
-    }
-  };
+const queryClient = new QueryClient();
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px' }}>
-      <Queue items={items} refreshQueue={refreshQueue} />
-      <div style={{ display: 'flex', gap: '20px' }}>
-        <div style={{ flex: '1', marginRight: '10px' }}>
-          <LocalFiles 
-            currentPath={localPath}
-            setCurrentPath={setLocalPath}
-          />
-        </div>
-        <div style={{ flex: '1', marginLeft: '10px' }}>
-          <RemoteFiles 
-            localPath={localPath}
-            refreshQueue={refreshQueue}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
-export default App
+export default App;

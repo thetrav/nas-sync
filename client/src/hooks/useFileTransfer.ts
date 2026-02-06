@@ -1,13 +1,6 @@
-import { useState, useCallback } from "react";
-import type {
-  QueueResponse,
-  FileListingResponse,
-  FileEntry,
-  QueueItem,
-  QueueItemCreate,
-} from "@shared/types";
 import { useLocal } from "./useLocal";
 import { useRemote } from "./useRemote";
+import { useQueue } from "./useQueue";
 
 export function useFileTransfer() {
   const {
@@ -31,16 +24,32 @@ export function useFileTransfer() {
     remoteError,
   } = useRemote();
 
+  const {
+    transfers,
+    setTransfers,
+    refreshQueue,
+    enqueueFile,
+    deleteTransfer,
+    queueLoading,
+    queueError
+  } = useQueue();
+
   return {
     localPath,
-    remotePath,
     localFiles,
-    remoteFiles,
-    transfers,
+    localLoading,
+    localError,
     navigateLocal,
-    navigateRemote,
     refreshLocal,
+    remotePath,
+    remoteFiles,
+    remoteLoading,
+    remoteError,
+    navigateRemote,
     refreshRemote,
+    transfers,
+    queueLoading,
+    queueError,
     refreshQueue,
     enqueueFile,
     deleteTransfer,

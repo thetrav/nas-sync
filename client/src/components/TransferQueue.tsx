@@ -1,21 +1,23 @@
 import { RefreshCw, Trash2, ArrowDownToLine } from 'lucide-react';
-import { TransferItem } from '@/types/files';
+import { QueueItem } from "@shared/types";
 import { cn } from '@/lib/utils';
 
 interface TransferQueueProps {
-  items: TransferItem[];
-  onDelete: (id: string) => void;
+  items: QueueItem[];
+  onDelete: (id: number) => void;
   onRefresh: () => void;
+  loading: boolean;
+  error: string;
 }
 
-const statusLabels: Record<TransferItem['status'], string> = {
-  pending: 'Pending',
-  transferring: 'Transferring',
-  complete: 'Complete',
-  error: 'Error',
+const statusLabels: Record<QueueItem['status'], string> = {
+  queued: 'Pending',
+  downloading: 'Transferring',
+  completed: 'Complete',
+  failed: 'Error',
 };
 
-export function TransferQueue({ items, onDelete, onRefresh }: TransferQueueProps) {
+export function TransferQueue({ items, onDelete, onRefresh, loading, error }: TransferQueueProps) {
   return (
     <div className="panel h-full">
       <div className="panel-header">
@@ -24,7 +26,7 @@ export function TransferQueue({ items, onDelete, onRefresh }: TransferQueueProps
           <h2 className="panel-title">Transfer Queue</h2>
           <span className="text-xs text-muted-foreground">({items.length})</span>
         </div>
-        <button onClick={onRefresh} className="icon-button" title="Refresh queue">
+        <button disabled={loading} onClick={onRefresh} className="icon-button" title="Refresh queue">
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
@@ -42,10 +44,10 @@ export function TransferQueue({ items, onDelete, onRefresh }: TransferQueueProps
                   <span
                     className={cn(
                       'status-badge',
-                      item.status === 'pending' && 'status-pending',
-                      item.status === 'transferring' && 'status-transferring',
-                      item.status === 'complete' && 'status-complete',
-                      item.status === 'error' && 'status-error'
+                      item.status === 'queued' && 'status-pending',
+                      item.status === 'downloading' && 'status-transferring',
+                      item.status === 'completed' && 'status-complete',
+                      item.status === 'failed' && 'status-error'
                     )}
                   >
                     {statusLabels[item.status]}
@@ -55,33 +57,34 @@ export function TransferQueue({ items, onDelete, onRefresh }: TransferQueueProps
                 <div className="flex-1 min-w-0 grid grid-cols-2 gap-4">
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground mb-0.5">Remote</p>
-                    <p className="text-sm font-mono truncate" title={item.remotePath}>
-                      {item.remotePath}
+                    <p className="text-sm font-mono truncate" title={item.remote_path}>
+                      {item.remote_path}
                     </p>
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground mb-0.5">Local</p>
-                    <p className="text-sm font-mono truncate" title={item.localPath}>
-                      {item.localPath}
+                    <p className="text-sm font-mono truncate" title={item.local_path}>
+                      {item.local_path}
                     </p>
                   </div>
                 </div>
                 
-                {item.status === 'transferring' && item.progress !== undefined && (
+                {item.status === 'downloading' && item.completed !== undefined && (
                   <div className="w-20 flex-shrink-0">
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full bg-status-transferring transition-all duration-300"
-                        style={{ width: `${item.progress}%` }}
+                        style={{ width: `${item.completed}%` }}
                       />
                     </div>
                     <p className="text-xs text-muted-foreground text-center mt-1">
-                      {item.progress}%
+                      {item.completed}%
                     </p>
                   </div>
                 )}
                 
                 <button
+                  disabled={loading}
                   onClick={() => onDelete(item.id)}
                   className="icon-button text-destructive hover:text-destructive hover:bg-destructive/10"
                   title="Remove from queue"

@@ -7,7 +7,10 @@ COPY server ./
 
 # Stage 2: runtime
 FROM node:25-bookworm-slim
-# Install rsync + ssh client (rsync over ssh needs both)
+
+ARG UID=1000
+ARG GID=1000
+
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     rsync \
@@ -15,5 +18,8 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app/server
 COPY --from=builder /app/server ./
+
+USER thetrav
+
 CMD ["node", "src/index.ts"]
 
