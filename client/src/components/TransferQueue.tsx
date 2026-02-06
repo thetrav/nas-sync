@@ -1,7 +1,8 @@
-import { RefreshCw, Trash2, ArrowDownToLine } from 'lucide-react';
+import { Trash2, ArrowDownToLine } from 'lucide-react';
 import { QueueItem } from "@shared/types";
 import { cn } from '@/lib/utils';
 import { useRef, useEffect } from 'react';
+import { RefreshButton } from './RefreshButton';
 
 interface TransferQueueProps {
   items: QueueItem[];
@@ -38,9 +39,11 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error }: Tr
           <h2 className="panel-title">Transfer Queue</h2>
           <span className="text-xs text-muted-foreground">({items.length})</span>
         </div>
-        <button disabled={loading} onClick={onRefresh} className="icon-button" title="Refresh queue">
-          <RefreshCw className="w-4 h-4" />
-        </button>
+        <RefreshButton 
+          onClick={onRefresh} 
+          title="Refresh queue" 
+          loading={loading} 
+        />
       </div>
       
       <div ref={scrollContainerRef} className="panel-content scrollbar-thin">

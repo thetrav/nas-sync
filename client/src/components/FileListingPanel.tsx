@@ -1,6 +1,7 @@
-import { RefreshCw, Folder, File, ChevronRight, Plus, HardDrive, Cloud } from 'lucide-react';
+import { Folder, File, ChevronRight, Plus, HardDrive, Cloud } from 'lucide-react';
 import { FileEntry, QueueItemCreate } from "@shared/types";
 import { cn } from '@/lib/utils';
+import { RefreshButton } from './RefreshButton';
 
 interface FileListingPanelProps {
   title: string;
@@ -72,9 +73,11 @@ export function FileListingPanel({
           <IconComponent className={cn("w-4 h-4", icon === 'local' ? 'text-folder' : 'text-primary')} />
           <h2 className="panel-title">{title}</h2>
         </div>
-        <button onClick={onRefresh} className="icon-button" title="Refresh" disabled={loading}>
-          <RefreshCw className="w-4 h-4" />
-        </button>
+        <RefreshButton 
+          onClick={onRefresh} 
+          title="Refresh" 
+          loading={loading} 
+        />
       </div>
       
       {/* Breadcrumb path */}
