@@ -12,8 +12,8 @@ export function useLocal() {
     setLocalError(null);
     try {
       const response = await getLocalFiles(localPath);
-      setLocalPath(response.currentPath);
       setLocalFiles(response.entries);
+      setLocalPath(response.currentPath);
     } catch (e) {
       setLocalError(e);
     } finally {
@@ -21,9 +21,18 @@ export function useLocal() {
     }
   }, [localPath]);
 
-  const navigateLocal = useCallback((path: string) => {
-    setLocalPath(path);
-    refreshLocal();
+  const navigateLocal = useCallback(async (path: string) => {
+    setLocalLoading(true);
+    setLocalError(null);
+    try {
+      const response = await getLocalFiles(path);
+      setLocalFiles(response.entries);
+      setLocalPath(response.currentPath);
+    } catch (e) {
+      setLocalError(e);
+    } finally {
+      setLocalLoading(false);
+    }
   }, []);
 
   return {

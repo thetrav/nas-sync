@@ -47,7 +47,12 @@ export function FileListingPanel({
   
   const handleFileClick = (file: FileEntry) => {
     if (file.isDirectory) {
-      onNavigate(`${currentPath}${file.name}`);
+      const path = [currentPath];
+      if(!currentPath.endsWith("/")) {
+        path.push("/");
+      }
+      path.push(file.name);
+      onNavigate(path.join(""));
     }
   };
   
@@ -63,7 +68,7 @@ export function FileListingPanel({
           <IconComponent className={cn("w-4 h-4", icon === 'local' ? 'text-folder' : 'text-primary')} />
           <h2 className="panel-title">{title}</h2>
         </div>
-        <button onClick={onRefresh} className="icon-button" title="Refresh" disabled={!loading}>
+        <button onClick={onRefresh} className="icon-button" title="Refresh" disabled={loading}>
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
@@ -71,7 +76,7 @@ export function FileListingPanel({
       {/* Breadcrumb path */}
       <div className="px-4 py-2 bg-secondary/50 border-b border-panel-border flex items-center gap-1 text-sm overflow-x-auto scrollbar-thin">
         <button
-          disabled={!loading}
+          disabled={loading}
           onClick={() => onNavigate('/')}
           className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
         >
@@ -81,7 +86,7 @@ export function FileListingPanel({
           <span key={index} className="flex items-center gap-1 flex-shrink-0">
             <ChevronRight className="w-3 h-3 text-muted-foreground" />
             <button
-              disabled={!loading}
+              disabled={loading}
               onClick={() => handlePathClick(index)}
               className={cn(
                 "hover:text-foreground transition-colors font-mono",
@@ -136,7 +141,7 @@ export function FileListingPanel({
                 </div>
                 {showEnqueue && !file.isDirectory && (
                   <button
-                    disabled={!loading}
+                    disabled={loading}
                     onClick={(e) => {
                       e.stopPropagation();
                       onEnqueue?.({

@@ -21,9 +21,18 @@ export function useRemote() {
     }
   }, [remotePath]);
 
-  const navigateRemote = useCallback((path: string) => {
-    setRemotePath(path);
-    refreshRemote();
+  const navigateRemote = useCallback(async (path: string) => {
+    setRemoteLoading(true);
+    setRemoteError(null);
+    try {
+      const response = await getRemoteFiles(path);
+      setRemotePath(response.currentPath);
+      setRemoteFiles(response.entries);
+    } catch (e) {
+      setRemoteError(e);
+    } finally {
+      setRemoteLoading(false);
+    }
   }, []);
 
   return {
