@@ -31,7 +31,7 @@ export function useFileTransfer() {
     setTransfers,
     refreshQueue,
     enqueueFile: apiEnqueueFile,
-    deleteTransfer,
+    deleteTransfer: apiDeleteTransfer,
     queueLoading,
     queueError
   } = useQueue();
@@ -55,6 +55,22 @@ export function useFileTransfer() {
       )
     );
   }, [apiEnqueueFile, setRemoteFiles]);
+
+  const deleteTransfer = useCallback(async (id: number) => {
+    await apiDeleteTransfer(id);
+    
+    // Find the transfer being deleted and clear the corresponding file's queueStatus
+    const transferToDelete = transfers.find(t => t.id === id);
+    if (transferToDelete) {
+      setRemoteFiles(prevFiles => 
+        prevFiles.map(file => 
+          file.fullPath === transferToDelete.remote_path 
+            ? { ...file, queueStatus: undefined }
+            : file
+        )
+      );
+    }
+  }, [apiDeleteTransfer, setRemoteFiles, transfers]);
 
   return {
     localPath,
