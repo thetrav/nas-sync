@@ -3,7 +3,7 @@ import { FileEntry } from "@shared/types";
 import { useState, useCallback } from "react";
 
 export function useLocal() {
-  const [localPath, setLocalPath] = useState("/");
+  const [localPath, setLocalPath] = useState("");
   const [localFiles, setLocalFiles] = useState<FileEntry[]>([]);
   const [localLoading, setLocalLoading] = useState<boolean>(false);
   const [localError, setLocalError] = useState<string | null>(null);

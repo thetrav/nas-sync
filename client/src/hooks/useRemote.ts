@@ -3,7 +3,7 @@ import { FileEntry } from "@shared/types";
 import { useState, useCallback } from "react";
 
 export function useRemote() {
-  const [remotePath, setRemotePath] = useState("/");
+  const [remotePath, setRemotePath] = useState("");
   const [remoteFiles, setRemoteFiles] = useState<FileEntry[]>([]);
   const [remoteLoading, setRemoteLoading] = useState<boolean>(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);

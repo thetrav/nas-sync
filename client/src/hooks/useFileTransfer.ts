@@ -1,6 +1,7 @@
 import { useLocal } from "./useLocal";
 import { useRemote } from "./useRemote";
 import { useQueue } from "./useQueue";
+import { useEffect } from "react";
 
 export function useFileTransfer() {
   const {
@@ -33,6 +34,14 @@ export function useFileTransfer() {
     queueLoading,
     queueError
   } = useQueue();
+
+  // refresh everything once on initial load
+   useEffect(() => {
+    refreshLocal();
+    refreshRemote();
+    refreshQueue();
+  }, []);
+
 
   return {
     localPath,

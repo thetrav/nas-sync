@@ -6,3 +6,4 @@ package-lock.json
 deploy.sh
 *.sqlite-wal
 *.sqlite-shm
+server/ui
