@@ -1,5 +1,6 @@
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface RefreshButtonProps {
   onClick: () => void;
@@ -8,11 +9,22 @@ interface RefreshButtonProps {
 }
 
 export function RefreshButton({ onClick, title, loading }: RefreshButtonProps) {
+  const [isClicked, setIsClicked] = useState(false);
+
+  const handleClick = () => {
+    setIsClicked(true);
+    setTimeout(() => setIsClicked(false), 200);
+    onClick();
+  };
+
   return (
     <button 
       disabled={loading} 
-      onClick={onClick} 
-      className="icon-button" 
+      onClick={handleClick} 
+      className={cn(
+        "icon-button transition-all",
+        isClicked && "scale-150 opacity-70"
+      )} 
       title={title}
     >
       <RefreshCw 

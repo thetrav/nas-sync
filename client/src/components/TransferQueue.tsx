@@ -1,7 +1,7 @@
 import { Trash2, ArrowDownToLine } from 'lucide-react';
 import { QueueItem } from "@shared/types";
 import { cn } from '@/lib/utils';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { RefreshButton } from './RefreshButton';
 
 interface TransferQueueProps {
@@ -21,6 +21,7 @@ const statusLabels: Record<QueueItem['status'], string> = {
 
 export function TransferQueue({ items, onDelete, onRefresh, loading, error }: TransferQueueProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [clickedDeleteId, setClickedDeleteId] = useState<number | null>(null);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -100,8 +101,15 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error }: Tr
                 
                 <button
                   disabled={loading}
-                  onClick={() => onDelete(item.id)}
-                  className="icon-button text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    setClickedDeleteId(item.id);
+                    setTimeout(() => setClickedDeleteId(null), 200);
+                    onDelete(item.id);
+                  }}
+                  className={cn(
+                    "icon-button text-destructive hover:text-destructive hover:bg-destructive/10 transition-all",
+                    clickedDeleteId === item.id && "scale-150 opacity-70"
+                  )}
                   title="Remove from queue"
                 >
                   <Trash2 className="w-4 h-4" />
