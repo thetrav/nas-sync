@@ -32,6 +32,14 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error }: Tr
     }
   }, [items]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      onRefresh();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [onRefresh]);
+
   return (
     <div className="panel h-full">
       <div className="panel-header">
