@@ -23,7 +23,10 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error }: Tr
 
   useEffect(() => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }, [items]);
 
