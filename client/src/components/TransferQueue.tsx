@@ -1,6 +1,7 @@
 import { RefreshCw, Trash2, ArrowDownToLine } from 'lucide-react';
 import { QueueItem } from "@shared/types";
 import { cn } from '@/lib/utils';
+import { useRef, useEffect } from 'react';
 
 interface TransferQueueProps {
   items: QueueItem[];
@@ -18,6 +19,14 @@ const statusLabels: Record<QueueItem['status'], string> = {
 };
 
 export function TransferQueue({ items, onDelete, onRefresh, loading, error }: TransferQueueProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  }, [items]);
+
   return (
     <div className="panel h-full">
       <div className="panel-header">
@@ -31,7 +40,7 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error }: Tr
         </button>
       </div>
       
-      <div className="panel-content scrollbar-thin">
+      <div ref={scrollContainerRef} className="panel-content scrollbar-thin">
         {items.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             No transfers in queue
