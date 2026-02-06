@@ -2,7 +2,12 @@ import { Folder, File, ChevronRight, Plus, HardDrive, Cloud } from 'lucide-react
 import { FileEntry, QueueItemCreate } from "@shared/types";
 import { cn } from '@/lib/utils';
 import { RefreshButton } from './RefreshButton';
+import { BreadcrumbButton } from './BreadcrumbButton';
+import { AddButton } from './AddButton';
+import { NewFolder } from './NewFolder';
 import { useState } from 'react';
+
+
 
 interface FileListingPanelProps {
   title: string;
@@ -17,16 +22,6 @@ interface FileListingPanelProps {
   error: string;
   localPath: string;
   remotePath: string;
-}
-
-function formatDate(date?: Date): string {
-  if (!date) return '—';
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 function filePath(currentPath: string, fileName: string) {
@@ -53,8 +48,6 @@ export function FileListingPanel({
   remotePath
 }: FileListingPanelProps) {
   const IconComponent = icon === 'local' ? HardDrive : Cloud;
-  const [clickedButtonIndex, setClickedButtonIndex] = useState<number | null>(null);
-  const [clickedBreadcrumbIndex, setClickedBreadcrumbIndex] = useState<number | null>(null);
   const [clickedFolderIndex, setClickedFolderIndex] = useState<number | null>(null);
   const [clickedFileIconIndex, setClickedFileIconIndex] = useState<number | null>(null);
   
@@ -69,10 +62,13 @@ export function FileListingPanel({
   };
   
   const handlePathClick = (index: number) => {
-    setClickedBreadcrumbIndex(index);
-    setTimeout(() => setClickedBreadcrumbIndex(null), 200);
     const newPath = '/' + pathParts.slice(0, index + 1).join('/');
     onNavigate(newPath);
+  };
+
+  const handleCreateFolder = (folderName: string) => {
+    // TODO: Create folder logic
+    console.log('Create folder:', folderName);
   };
   
   return (
@@ -91,29 +87,29 @@ export function FileListingPanel({
       
       {/* Breadcrumb path */}
       <div className="px-4 py-2 bg-secondary/50 border-b border-panel-border flex items-center gap-1 text-sm overflow-x-auto scrollbar-thin">
-        <button
-          disabled={loading}
+        <BreadcrumbButton 
           onClick={() => onNavigate('/')}
-          className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-        >
-          /
-        </button>
+          label="/"
+          disabled={loading}
+        />
         {pathParts.map((part, index) => (
           <span key={index} className="flex items-center gap-1 flex-shrink-0">
             <ChevronRight className="w-3 h-3 text-muted-foreground" />
-            <button
-              disabled={loading}
+            <BreadcrumbButton 
               onClick={() => handlePathClick(index)}
-              className={cn(
-                "hover:text-foreground transition-all font-mono",
-                index === pathParts.length - 1 ? 'text-foreground' : 'text-muted-foreground',
-                clickedBreadcrumbIndex === index && "scale-150 opacity-70"
-              )}
-            >
-              {part}
-            </button>
+              label={part}
+              disabled={loading}
+              isLast={index === pathParts.length - 1}
+              className="font-mono"
+            />
           </span>
         ))}
+        {icon === 'local' && (
+          <NewFolder 
+            disabled={loading}
+            onCreateFolder={handleCreateFolder}
+          />
+        )}
       </div>
       
       {/* File listing */}
@@ -167,30 +163,19 @@ export function FileListingPanel({
                   {showEnqueue && file.queueStatus}
                 </div>
                 {showEnqueue && !file.isDirectory && !["queued", "downloading"].includes(file.queueStatus) && (
-                  <button
+                  <AddButton
                     disabled={loading}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setClickedButtonIndex(i);
+                    onClick={() => onEnqueue?.({
+                      remote_path: filePath(remotePath, file.name),
+                      local_path: filePath(localPath, file.name),
+                      size: file.size
+                    })}
+                    label="Add to queue"
+                    onFileIconClick={() => {
                       setClickedFileIconIndex(i);
-                      setTimeout(() => {
-                        setClickedButtonIndex(null);
-                        setClickedFileIconIndex(null);
-                      }, 200);
-                      onEnqueue?.({
-                        remote_path: filePath(remotePath, file.name),
-                        local_path: filePath(localPath, file.name),
-                        size: file.size
-                      });
+                      setTimeout(() => setClickedFileIconIndex(null), 200);
                     }}
-                    className={cn(
-                      "enqueue-button opacity-0 group-hover:opacity-70 transition-all",
-                      clickedButtonIndex === i && "scale-150 opacity-70"
-                    )}
-                    title="Add to queue"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
+                  />
                 )}
                 {showEnqueue && file.isDirectory && <div className="w-8" />}
               </div>
