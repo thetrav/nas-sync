@@ -7,9 +7,10 @@ interface AddButtonProps {
   label: string;
   disabled: boolean;
   onFileIconClick?: () => void;
+  alwaysVisible?: boolean;
 }
 
-export function AddButton({ onClick, label, disabled, onFileIconClick }: AddButtonProps) {
+export function AddButton({ onClick, label, disabled, onFileIconClick, alwaysVisible = false }: AddButtonProps) {
   const [isClicked, setIsClicked] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -25,7 +26,10 @@ export function AddButton({ onClick, label, disabled, onFileIconClick }: AddButt
       disabled={disabled}
       onClick={handleClick}
       className={cn(
-        "enqueue-button opacity-0 group-hover:opacity-70 transition-all",
+        "enqueue-button transition-all",
+        alwaysVisible 
+          ? "opacity-70 hover:opacity-100" 
+          : "opacity-0 group-hover:opacity-70",
         isClicked && "scale-150 opacity-70"
       )}
       title={label}

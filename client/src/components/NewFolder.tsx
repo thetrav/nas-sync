@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 import { AddButton } from './AddButton';
 
 interface NewFolderProps {
@@ -46,6 +46,11 @@ export function NewFolder({ disabled, onCreateFolder }: NewFolderProps) {
     }
   };
 
+  const handleCancelClick = () => {
+    setFolderName('');
+    setShowInput(false);
+  };
+
   useEffect(() => {
     if (showInput && inputRef.current) {
       inputRef.current.focus();
@@ -72,14 +77,23 @@ export function NewFolder({ disabled, onCreateFolder }: NewFolderProps) {
               disabled={disabled}
               onClick={handleCreateClick}
               label="Create folder"
+              alwaysVisible
             />
           )}
+          <button
+            onClick={handleCancelClick}
+            className="text-red-500 hover:text-red-600 transition-colors p-1"
+            title="Cancel"
+          >
+            <X className="w-3 h-3" />
+          </button>
         </>
       ) : (
         <AddButton
           disabled={disabled}
           onClick={handleAddClick}
           label="New folder"
+          alwaysVisible
         />
       )}
     </>
