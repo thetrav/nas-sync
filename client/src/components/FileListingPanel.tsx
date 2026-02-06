@@ -27,6 +27,15 @@ function formatDate(date?: Date): string {
   });
 }
 
+function filePath(currentPath: string, fileName: string) {
+  const path = [currentPath];
+  if(!currentPath.endsWith("/")) {
+    path.push("/");
+  }
+  path.push(fileName);
+  return path.join("");
+}
+
 export function FileListingPanel({
   title,
   icon,
@@ -47,12 +56,7 @@ export function FileListingPanel({
   
   const handleFileClick = (file: FileEntry) => {
     if (file.isDirectory) {
-      const path = [currentPath];
-      if(!currentPath.endsWith("/")) {
-        path.push("/");
-      }
-      path.push(file.name);
-      onNavigate(path.join(""));
+      onNavigate(filePath(currentPath, file.name));
     }
   };
   
@@ -145,8 +149,8 @@ export function FileListingPanel({
                     onClick={(e) => {
                       e.stopPropagation();
                       onEnqueue?.({
-                        remote_path: remotePath,
-                        local_path: localPath,
+                        remote_path: filePath(remotePath, file.name),
+                        local_path: filePath(localPath, file.name),
                         size: file.size
                       });
                     }}
