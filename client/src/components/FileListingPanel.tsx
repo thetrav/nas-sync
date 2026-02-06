@@ -2,6 +2,7 @@ import { Folder, File, ChevronRight, Plus, HardDrive, Cloud } from 'lucide-react
 import { FileEntry, QueueItemCreate } from "@shared/types";
 import { cn } from '@/lib/utils';
 import { RefreshButton } from './RefreshButton';
+import { useState } from 'react';
 
 interface FileListingPanelProps {
   title: string;
@@ -52,6 +53,7 @@ export function FileListingPanel({
   remotePath
 }: FileListingPanelProps) {
   const IconComponent = icon === 'local' ? HardDrive : Cloud;
+  const [clickedButtonIndex, setClickedButtonIndex] = useState<number | null>(null);
   
   const pathParts = currentPath.split('/').filter(Boolean);
   
@@ -151,13 +153,18 @@ export function FileListingPanel({
                     disabled={loading}
                     onClick={(e) => {
                       e.stopPropagation();
+                      setClickedButtonIndex(i);
+                      setTimeout(() => setClickedButtonIndex(null), 200);
                       onEnqueue?.({
                         remote_path: filePath(remotePath, file.name),
                         local_path: filePath(localPath, file.name),
                         size: file.size
                       });
                     }}
-                    className="enqueue-button opacity-0 group-hover:opacity-100 transition-opacity"
+                    className={cn(
+                      "enqueue-button opacity-0 group-hover:opacity-70 transition-all",
+                      clickedButtonIndex === i && "scale-150 opacity-70"
+                    )}
                     title="Add to queue"
                   >
                     <Plus className="w-3 h-3" />
