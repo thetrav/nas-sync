@@ -19,9 +19,7 @@ const config = {
     : undefined,
 };
 
-export async function listFolderContents(path: string): Promise<FileEntry[]> {
-  console.log(`listing`, path);
-  const command = `ls -la "${path}" | tail -n +2`;
+export async function executeSshCommand(command: string): Promise<string[]> {
   const client = new Client();
   
   return new Promise((resolve, reject) => {
@@ -34,7 +32,7 @@ export async function listFolderContents(path: string): Promise<FileEntry[]> {
       client.exec(command, (err, stream) => {
         if (err) {
           client.end();
-          reject(new Error(`Failed to list directory ${path}: ${err}`));
+          reject(new Error(`Failed to execute command: ${err}`));
           return;
         }
 
@@ -43,40 +41,12 @@ export async function listFolderContents(path: string): Promise<FileEntry[]> {
           client.end();
           
           if (code !== 0) {
-            reject(new Error(`ls command failed with exit code ${code}`));
+            reject(new Error(`Command failed with exit code ${code}`));
             return;
           }
 
           const lines = output.trim().split('\n');
-          const entries: FileEntry[] = [];
-
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            
-            // Parse ls -la output
-            // Example: drwxr-xr-x 2 user group 4096 Jan 01 12:00 dirname
-            //          -rw-r--r-- 1 user group 1024 Jan 01 12:00 filename
-            const parts = line.trim().split(/\s+/);
-            if (parts.length < 9) continue;
-
-            const permissions = parts[0];
-            const size = parts[4];
-            const name = parts.slice(8).join(' ');
-            
-            // Skip "." and ".." entries
-            if (name === '.' || name === '..') continue;
-
-            const isDirectory = permissions.startsWith('d');
-            
-            entries.push({
-              name,
-              isDirectory,
-              fullPath: `${path}/${name}`,
-              size: formatBytes(isDirectory ? 0 : parseInt(size) || 0),
-            });
-          }
-
-          resolve(entries);
+          resolve(lines);
         }).on('data', (data: Buffer) => {
           output += data.toString();
         })?.stderr.on('data', (data: Buffer) => {
@@ -89,6 +59,42 @@ export async function listFolderContents(path: string): Promise<FileEntry[]> {
       });
     });
   });
+}
+
+export async function listFolderContents(path: string): Promise<FileEntry[]> {
+  console.log(`listing`, path);
+  const command = `ls -la "${path}" | tail -n +2`;
+  const lines = await executeSshCommand(command);
+  
+  const entries: FileEntry[] = [];
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    
+    // Parse ls -la output
+    // Example: drwxr-xr-x 2 user group 4096 Jan 01 12:00 dirname
+    //          -rw-r--r-- 1 user group 1024 Jan 01 12:00 filename
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 9) continue;
+
+    const permissions = parts[0];
+    const size = parts[4];
+    const name = parts.slice(8).join(' ');
+    
+    // Skip "." and ".." entries
+    if (name === '.' || name === '..') continue;
+
+    const isDirectory = permissions.startsWith('d');
+    
+    entries.push({
+      name,
+      isDirectory,
+      fullPath: `${path}/${name}`,
+      size: formatBytes(isDirectory ? 0 : parseInt(size) || 0),
+    });
+  }
+
+  return entries;
 }
 
 export async function list(params: {path: string}): Promise<FileListingResponse> {
