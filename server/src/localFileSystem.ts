@@ -1,4 +1,4 @@
-import { readdir, stat } from "fs/promises";
+import { readdir, stat, mkdir } from "fs/promises";
 import { join } from "path";
 import { formatBytes } from "./fileListing.ts";
 
@@ -56,20 +56,19 @@ export async function listLocal(params: {path: string}) {
   };
 }
 
-// export async function createLocalFolder(req: Request) {
-//   const formData = await req.formData();
-//   const folderName = formData.get("foldername") as string;
-
-//   if (!folderName) {
-//     throw new ServerError("Folder name is required", 400);
-//   }
-
-//   const newPath = join(currentLocalPath, folderName);
-//   await mkdir(newPath);
-
-//   return {
-//     success: true,
-//     message: `Folder '${folderName}' created successfully`,
-//     path: newPath,
-//   };
-// }
+export async function createLocalFolder(params: {path: string, name: string}) {
+  const { path: targetPath, name: folderName } = params;
+  
+  if (!folderName) {
+    throw new Error("Folder name is required");
+  }
+  
+  const pathParts = targetPath.split('/').filter(Boolean);
+  const nameParts = folderName.split('/').filter(Boolean);
+  const allParts = [...pathParts, ...nameParts];
+  const fullPath = '/' + allParts.join('/');
+  
+  await mkdir(fullPath);
+  
+  return { path: fullPath };
+}

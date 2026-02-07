@@ -14,6 +14,7 @@ export function useFileTransfer() {
     refreshLocal,
     localLoading,
     localError,
+    createFolder,
   } = useLocal();
   const {
     remotePath,
@@ -72,6 +73,8 @@ export function useFileTransfer() {
     }
   }, [apiDeleteTransfer, setRemoteFiles, transfers]);
 
+
+
   return {
     localPath,
     localFiles,
@@ -91,5 +94,6 @@ export function useFileTransfer() {
     refreshQueue,
     enqueueFile,
     deleteTransfer,
+    createFolder,
   };
 }

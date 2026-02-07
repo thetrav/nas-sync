@@ -22,6 +22,7 @@ interface FileListingPanelProps {
   error: string;
   localPath: string;
   remotePath: string;
+  onCreateFolder?: (folderName: string) => void;
 }
 
 function filePath(currentPath: string, fileName: string) {
@@ -45,7 +46,8 @@ export function FileListingPanel({
   loading,
   error,
   localPath,
-  remotePath
+  remotePath,
+  onCreateFolder
 }: FileListingPanelProps) {
   const IconComponent = icon === 'local' ? HardDrive : Cloud;
   const [clickedFolderIndex, setClickedFolderIndex] = useState<number | null>(null);
@@ -67,8 +69,7 @@ export function FileListingPanel({
   };
 
   const handleCreateFolder = (folderName: string) => {
-    // TODO: Create folder logic
-    console.log('Create folder:', folderName);
+    onCreateFolder?.(folderName);
   };
   
   return (

@@ -1,4 +1,4 @@
-import { getLocalFiles } from "@/Api";
+import { getLocalFiles, createLocalFolder } from "@/Api";
 import { FileEntry } from "@shared/types";
 import { useState, useCallback } from "react";
 
@@ -35,6 +35,11 @@ export function useLocal() {
     }
   }, []);
 
+  const createFolder = useCallback(async (folderName: string) => {
+    await createLocalFolder(localPath, folderName);
+    await refreshLocal();
+  }, [localPath, refreshLocal]);
+
   return {
     localPath,
     setLocalPath,
@@ -44,5 +49,6 @@ export function useLocal() {
     refreshLocal,
     localLoading,
     localError,
+    createFolder,
   };
 }

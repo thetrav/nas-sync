@@ -78,3 +78,7 @@ export async function enqueueFile(obj: QueueItemCreate): Promise<QueueItem> {
     obj
   );
 }
+
+export async function createLocalFolder(path: string, name: string): Promise<void> {
+  await post<void>("/local", { path, name });
+}

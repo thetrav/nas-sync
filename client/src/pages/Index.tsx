@@ -22,6 +22,7 @@ const Index = () => {
     refreshQueue,
     enqueueFile,
     deleteTransfer,
+    createFolder,
   } = useFileTransfer();
 
   return (
@@ -52,6 +53,7 @@ const Index = () => {
             error={localError}
             localPath={localPath}
             remotePath={remotePath}
+            onCreateFolder={createFolder}
           />
         </div>
 
