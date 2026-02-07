@@ -6,7 +6,7 @@ export function useLocal() {
   const [localPath, setLocalPath] = useState("");
   const [localFiles, setLocalFiles] = useState<FileEntry[]>([]);
   const [localLoading, setLocalLoading] = useState<boolean>(false);
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<{message: string} | null>(null);
   const refreshLocal = useCallback(async () => {
     setLocalLoading(true);
     setLocalError(null);
@@ -36,8 +36,16 @@ export function useLocal() {
   }, []);
 
   const createFolder = useCallback(async (folderName: string) => {
-    await createLocalFolder(localPath, folderName);
-    await refreshLocal();
+    setLocalLoading(true);
+    setLocalError(null);
+    try {
+      await createLocalFolder(localPath, folderName);
+      await refreshLocal();
+    } catch (e) {
+      setLocalError(e);
+    } finally {
+      setLocalLoading(false);
+    }
   }, [localPath, refreshLocal]);
 
   return {

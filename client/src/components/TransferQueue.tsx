@@ -9,7 +9,7 @@ interface TransferQueueProps {
   onDelete: (id: number) => void;
   onRefresh: () => void;
   loading: boolean;
-  error: string;
+  error: {message: string} | null;
 }
 
 const statusLabels: Record<QueueItem['status'], string> = {
@@ -47,6 +47,9 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error }: Tr
           <ArrowDownToLine className="w-4 h-4 text-primary" />
           <h2 className="panel-title">Transfer Queue</h2>
           <span className="text-xs text-muted-foreground">({items.length})</span>
+          {error && (
+            <span className="text-sm text-destructive ml-2">{error.message}</span>
+          )}
         </div>
         <RefreshButton 
           onClick={onRefresh} 

@@ -19,7 +19,7 @@ interface FileListingPanelProps {
   onEnqueue?: (item: QueueItemCreate) => void;
   showEnqueue?: boolean;
   loading: boolean;
-  error: string;
+  error: {message: string} | null;
   localPath: string;
   remotePath: string;
   onCreateFolder?: (folderName: string) => void;
@@ -78,6 +78,9 @@ export function FileListingPanel({
         <div className="flex items-center gap-2">
           <IconComponent className={cn("w-4 h-4", icon === 'local' ? 'text-folder' : 'text-primary')} />
           <h2 className="panel-title">{title}</h2>
+          {error && (
+            <span className="text-sm text-destructive ml-2">{error.message}</span>
+          )}
         </div>
         <RefreshButton 
           onClick={onRefresh} 

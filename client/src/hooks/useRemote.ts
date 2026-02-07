@@ -6,7 +6,7 @@ export function useRemote() {
   const [remotePath, setRemotePath] = useState("");
   const [remoteFiles, setRemoteFiles] = useState<FileEntry[]>([]);
   const [remoteLoading, setRemoteLoading] = useState<boolean>(false);
-  const [remoteError, setRemoteError] = useState<string | null>(null);
+  const [remoteError, setRemoteError] = useState<{message: string} | null>(null);
   const refreshRemote = useCallback(async () => {
     setRemoteLoading(true);
     setRemoteError(null);

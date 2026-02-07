@@ -25,7 +25,8 @@ async function get<T>(path: string, params: object = {}): Promise<T> {
   if (response.ok) {
     return (await response.json()) as T;
   } else {
-    throw new Error("network failure");
+    const responseText = await response.text();
+    throw new Error(`network failure (${response.status}${responseText ? `: ${responseText}` : ''})`);
   }
 }
 
@@ -40,7 +41,8 @@ async function post<T>(path: string, data: object): Promise<T> {
   if (response.ok) {
     return (await response.json()) as T;
   } else {
-    throw new Error(`network failure`);
+    const responseText = await response.text();
+    throw new Error(`network failure (${response.status}${responseText ? `: ${responseText}` : ''})`);
   }
 }
 
