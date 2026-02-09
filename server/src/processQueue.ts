@@ -12,11 +12,11 @@ async function allJobs(): Promise<DownloadJob[]> {
 }
 
 async function updateJob(job: DownloadJob) {
-  return withDb(null, async () => await job.update());
+  return withDb(null, async () => { await job.update(); });
 }
 
 async function deleteJob(job: DownloadJob) {
-  return withDb(null, async () => await job.remove());
+  return withDb(null, async () => { await job.remove(); });
 }
 
 async function processQueueOnce() {

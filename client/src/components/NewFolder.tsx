@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import { AddButton } from './AddButton';
 
-interface NewFolderProps {
+type NewFolderProps {
   disabled: boolean;
   onCreateFolder: (folderName: string) => void;
 }

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useRef, useEffect, useState } from 'react';
 import { RefreshButton } from './RefreshButton';
 
-interface TransferQueueProps {
+type TransferQueueProps {
   items: QueueItem[];
   onDelete: (id: number) => void;
   onRefresh: () => void;

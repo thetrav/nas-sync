@@ -55,7 +55,7 @@ export class DownloadJob implements QueueItem {
   }) {
     const result = (await db().get(
       `SELECT MAX(position) as position FROM ${table};`,
-    )) as { position: number } | undefined;
+    ));
     const position = result?.position || 0;
     await db().run(
       `insert into ${table} (position, remote_path, local_path, status, created_at, started_at, completed_at, size, completed) 

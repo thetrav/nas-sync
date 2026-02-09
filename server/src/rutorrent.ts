@@ -11,16 +11,16 @@ function log(o:any) {
     // console.log(JSON.stringify(o, null, 2));
 }
 
-type FileData = {array:{data:{value:{string: string}}}};
+interface FileData {array:{data:{value:{string: string}}}}
 
-type MultiFileResponse = {
-    "?xml":string,
-    methodResponse:{params:{param:{value:{array:{data:{value:FileData[] | FileData}}}}}}
-};
-type SingleStringResponse = {
-    "?xml":string,
-    methodResponse:{params:{param:{value:{string: string}}}}
-};
+interface MultiFileResponse {
+    "?xml":string;
+    methodResponse:{params:{param:{value:{array:{data:{value:FileData[] | FileData}}}}}};
+}
+interface SingleStringResponse {
+    "?xml":string;
+    methodResponse:{params:{param:{value:{string: string}}}};
+}
 
 
 async function rpcCall<T>(methodName:string, params: string[]): Promise<T> {

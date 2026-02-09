@@ -24,6 +24,7 @@ export default defineConfig([
     ],
     rules: {
       "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
     },
   },
 ]);

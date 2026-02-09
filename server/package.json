@@ -7,7 +7,7 @@
     "start": "tsx src/index.ts",
     "build": "tsc",
     "lint": "eslint --fix .",
-    "test": "set -a && source ../.env && set +a && node --test",
+    "test": "set -a && source ../.env && set +a && node --test --experimental-test-module-mocks",
     "processQueue": "set -a && source ../.env && set +a && tsx src/processQueue.ts"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import { readdir, stat, mkdir } from "fs/promises";
+import { readdir, stat, mkdir, access } from "fs/promises";
 import { join } from "path";
 import { formatBytes } from "./fileListing.ts";
 
@@ -54,6 +54,32 @@ export async function listLocal(params: {path: string}) {
     entries: fileEntries,
     rootPath: process.env.LOCAL_ROOT ?? "/tmp",
   };
+}
+
+export async function fileExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function filterExistingFiles(remoteRoot: string, filePaths: string[]): Promise<string[]> {
+  const localRoot = process.env.LOCAL_ROOT ?? "/tmp";
+  const missingFiles: string[] = [];
+  
+  for (const filePath of filePaths) {
+    const relativePath = filePath.replace(remoteRoot, "").replace(/^\//, "");
+    const localPath = join(localRoot, relativePath);
+    
+    const exists = await fileExists(localPath);
+    if (!exists) {
+      missingFiles.push(filePath);
+    }
+  }
+  
+  return missingFiles;
 }
 
 export async function createLocalFolder(params: {path: string, name: string}) {

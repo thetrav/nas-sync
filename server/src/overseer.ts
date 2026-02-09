@@ -1,39 +1,39 @@
 interface OverseerUser {
   id: number;
-  email: string;
-  username: string;
-  plexToken: string;
-  plexUsername: string;
-  userType: number;
-  permissions: number;
-  avatar: string;
-  createdAt: string;
-  updatedAt: string;
-  requestCount: number;
+  email?: string;
+  username?: string;
+  plexToken?: string;
+  plexUsername?: string;
+  userType?: number;
+  permissions?: number;
+  avatar?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  requestCount?: number;
 }
 
 interface OverseerMedia {
-  id: number;
-  tmdbId: number;
-  tvdbId: number;
-  status: number;
-  requests: string[];
-  createdAt: string;
-  updatedAt: string;
+  id?: number;
+  tmdbId?: number;
+  tvdbId?: number;
+  status?: number;
+  requests?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface OverseerRequest {
   id: number;
-  status: number;
+  status?: number;
   media: OverseerMedia;
-  createdAt: string;
-  updatedAt: string;
-  requestedBy: OverseerUser;
-  modifiedBy: OverseerUser;
-  is4k: boolean;
-  serverId: number;
-  profileId: number;
-  rootFolder: string;
+  createdAt?: string;
+  updatedAt?: string;
+  requestedBy?: OverseerUser;
+  modifiedBy?: OverseerUser;
+  is4k?: boolean;
+  serverId?: number;
+  profileId?: number;
+  rootFolder?: string;
 }
 
 interface OverseerPageInfo {

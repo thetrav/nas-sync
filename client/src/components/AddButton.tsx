@@ -2,7 +2,7 @@ import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
-interface AddButtonProps {
+type AddButtonProps {
   onClick: () => void;
   label: string;
   disabled: boolean;

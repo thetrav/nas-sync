@@ -1,8 +1,8 @@
 import { ServerError } from "./ServerError.ts";
 import express from "express";
-type Request = express.Request;
-type Response = express.Response;
 
+export type Request = express.Request;
+export type Response = express.Response;
 export type RequestHandler = (req: Request, res: Response) => Promise<void>;
 export type AppHandler<I, O> = (params: I) => O | Promise<O>;
 

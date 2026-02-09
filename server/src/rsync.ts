@@ -46,7 +46,7 @@ export async function downloadFile(
 
       // rsync --info=progress2 emits lines like:
       // "  123,456,789  42%   12.34MB/s    0:01:23"
-      const match = data.toString().match(/^\s*([\d,]+)/m);
+      const match = /^\s*([\d,]+)/m.exec(data.toString());
       if (!match) return;
 
       const bytes = parseInt(match[1].replace(/,/g, ""), 10);

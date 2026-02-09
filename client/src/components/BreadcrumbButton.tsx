@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
-interface BreadcrumbButtonProps {
+type BreadcrumbButtonProps {
   onClick: () => void;
   label: string;
   disabled: boolean;

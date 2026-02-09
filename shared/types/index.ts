@@ -1,4 +1,4 @@
-export interface FileEntry {
+export type FileEntry {
   name: string;
   isDirectory: boolean;
   fullPath: string;
@@ -6,12 +6,12 @@ export interface FileEntry {
   queueStatus?: 'queued' | 'downloading' | 'completed' | 'failed';
 }
 
-export interface FileListingResponse {
+export type FileListingResponse {
   currentPath: string;
   entries: FileEntry[];
 }
 
-export interface QueueItem {
+export type QueueItem {
   id: number;
   position: number;
   remote_path: string;
@@ -24,17 +24,17 @@ export interface QueueItem {
   completed: string;
 }
 
-export interface QueueResponse {
+export type QueueResponse {
   items: QueueItem[];
   count: number;
 }
 
-export interface Cron {
+export type Cron {
   time: string;
   exists: boolean;
 }
 
-export interface QueueItemCreate {
+export type QueueItemCreate {
   remote_path: string;
   local_path: string;
   size: string;
