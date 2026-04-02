@@ -1,11 +1,13 @@
 import { getQueue, enqueueFile as apiEnqueue, removeFromQueue } from "@/Api";
-import { QueueItem, QueueItemCreate, } from "@shared/types";
+import { QueueItem, QueueItemCreate } from "@shared/types";
 import { useState, useCallback } from "react";
 
 export function useQueue() {
   const [transfers, setTransfers] = useState<QueueItem[]>([]);
   const [queueLoading, setQueueLoading] = useState<boolean>(false);
-  const [queueError, setQueueError] = useState<string | null>(null);
+  const [queueError, setQueueError] = useState<{ message: string } | null>(
+    null,
+  );
 
   const refreshQueue = useCallback(async () => {
     setQueueLoading(true);
@@ -53,6 +55,6 @@ export function useQueue() {
     enqueueFile,
     deleteTransfer,
     queueLoading,
-    queueError
+    queueError,
   };
 }

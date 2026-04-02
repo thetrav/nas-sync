@@ -1,10 +1,10 @@
 import { Trash2, ArrowDownToLine } from 'lucide-react';
 import { QueueItem } from "@shared/types";
 import { cn } from '@/lib/utils';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { RefreshButton } from './RefreshButton';
 
-type TransferQueueProps {
+type TransferQueueProps = {
   items: QueueItem[];
   onDelete: (id: number) => void;
   onRefresh: () => void;
@@ -21,16 +21,23 @@ const statusLabels: Record<QueueItem['status'], string> = {
 
 export function TransferQueue({ items, onDelete, onRefresh, loading, error }: TransferQueueProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [clickedDeleteId, setClickedDeleteId] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
+  const priorityItemId = useMemo(() => {
+    const downloading = items.find(i => i.status === 'downloading');
+    if (downloading) return downloading.id;
+    return items.find(i => i.status !== 'completed')?.id;
   }, [items]);
+
+  useEffect(() => {
+    if (!scrollContainerRef.current || priorityItemId === undefined) return;
+    
+    const targetRef = itemRefs.current.get(priorityItemId);
+    if (targetRef) {
+      targetRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [items, priorityItemId]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -66,7 +73,14 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error }: Tr
         ) : (
           <div className="divide-y divide-border">
             {items.map((item) => (
-              <div key={item.id} className="queue-row">
+              <div 
+                key={item.id} 
+                className="queue-row"
+                ref={(el) => {
+                  if (el) itemRefs.current.set(item.id, el);
+                  else itemRefs.current.delete(item.id);
+                }}
+              >
                 <div className="flex-shrink-0">
                   <span
                     className={cn(

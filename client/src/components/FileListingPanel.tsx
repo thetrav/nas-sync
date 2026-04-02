@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 
 
-type FileListingPanelProps {
+type FileListingPanelProps  = {
   title: string;
   icon: 'local' | 'remote';
   files: FileEntry[];

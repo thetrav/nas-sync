@@ -46,7 +46,7 @@ type Action =
       toastId?: ToasterToast["id"];
     };
 
-type State {
+type State = {
   toasts: ToasterToast[];
 }
 
