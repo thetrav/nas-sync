@@ -23,6 +23,8 @@ type FileListingPanelProps  = {
   localPath: string;
   remotePath: string;
   onCreateFolder?: (folderName: string) => void;
+  noInternalScroll?: boolean;
+  wrapText?: boolean;
 }
 
 function filePath(currentPath: string, fileName: string) {
@@ -47,7 +49,9 @@ export function FileListingPanel({
   error,
   localPath,
   remotePath,
-  onCreateFolder
+  onCreateFolder,
+  noInternalScroll = false,
+  wrapText = false
 }: FileListingPanelProps) {
   const IconComponent = icon === 'local' ? HardDrive : Cloud;
   const [clickedFolderIndex, setClickedFolderIndex] = useState<number | null>(null);
@@ -90,7 +94,7 @@ export function FileListingPanel({
       </div>
       
       {/* Breadcrumb path */}
-      <div className="px-4 py-2 bg-secondary/50 border-b border-panel-border flex items-center gap-1 text-sm overflow-x-auto scrollbar-thin">
+      <div className="px-4 py-2 bg-secondary/50 border-b border-panel-border flex items-center gap-1 text-sm overflow-x-auto scrollbar-thin flex-wrap">
         <BreadcrumbButton 
           onClick={() => onNavigate('/')}
           label="/"
@@ -117,7 +121,7 @@ export function FileListingPanel({
       </div>
       
       {/* File listing */}
-      <div className="panel-content scrollbar-thin">
+      <div className={cn("panel-content scrollbar-thin", noInternalScroll && "flex-1")}>
         {files.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             Empty directory
@@ -157,7 +161,7 @@ export function FileListingPanel({
                     />
                   )}
                 </div>
-                <div className="flex-1 font-mono truncate" title={file.name}>
+                <div className={cn("flex-1 font-mono", wrapText ? "break-all" : "truncate")} title={file.name}>
                   {file.name}
                 </div>
                 <div className="w-24 text-right text-muted-foreground text-xs">

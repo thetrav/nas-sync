@@ -10,6 +10,7 @@ type TransferQueueProps = {
   onRefresh: () => void;
   loading: boolean;
   error: {message: string} | null;
+  noInternalScroll?: boolean;
 }
 
 const statusLabels: Record<QueueItem['status'], string> = {
@@ -19,7 +20,7 @@ const statusLabels: Record<QueueItem['status'], string> = {
   failed: 'Error',
 };
 
-export function TransferQueue({ items, onDelete, onRefresh, loading, error }: TransferQueueProps) {
+export function TransferQueue({ items, onDelete, onRefresh, loading, error, noInternalScroll = false }: TransferQueueProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [clickedDeleteId, setClickedDeleteId] = useState<number | null>(null);
@@ -65,7 +66,7 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error }: Tr
         />
       </div>
       
-      <div ref={scrollContainerRef} className="panel-content scrollbar-thin">
+      <div ref={scrollContainerRef} className={cn("panel-content scrollbar-thin", noInternalScroll && "flex-1")}>
         {items.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             No transfers in queue
