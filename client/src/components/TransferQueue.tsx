@@ -3,6 +3,7 @@ import { QueueItem } from "@shared/types";
 import { cn } from '@/lib/utils';
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { RefreshButton } from './RefreshButton';
+import { Switch } from '@/components/ui/switch';
 
 type TransferQueueProps = {
   items: QueueItem[];
@@ -24,6 +25,14 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error, noIn
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [clickedDeleteId, setClickedDeleteId] = useState<number | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(() => {
+    const saved = localStorage.getItem('transferQueueAutoRefresh');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('transferQueueAutoRefresh', String(autoRefresh));
+  }, [autoRefresh]);
 
   const priorityItemId = useMemo(() => {
     const downloading = items.find(i => i.status === 'downloading');
@@ -41,16 +50,17 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error, noIn
   }, [items, priorityItemId]);
 
   useEffect(() => {
+    if (!autoRefresh) return;
     const interval = setInterval(() => {
       onRefresh();
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [onRefresh]);
+  }, [onRefresh, autoRefresh]);
 
   return (
     <div className="panel h-full">
-      <div className="panel-header">
+      <div className="panel-header justify-between flex-wrap gap-y-2">
         <div className="flex items-center gap-2">
           <ArrowDownToLine className="w-4 h-4 text-primary" />
           <h2 className="panel-title">Transfer Queue</h2>
@@ -59,11 +69,18 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error, noIn
             <span className="text-sm text-destructive ml-2">{error.message}</span>
           )}
         </div>
-        <RefreshButton 
-          onClick={onRefresh} 
-          title="Refresh queue" 
-          loading={loading} 
-        />
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={autoRefresh}
+            onCheckedChange={setAutoRefresh}
+            title="Auto-refresh queue"
+          />
+          <RefreshButton 
+            onClick={onRefresh} 
+            title="Refresh queue" 
+            loading={loading} 
+          />
+        </div>
       </div>
       
       <div ref={scrollContainerRef} className={cn("panel-content scrollbar-thin", noInternalScroll && "flex-1")}>
