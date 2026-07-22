@@ -21,8 +21,12 @@ The client folder contains the react app that is the user interface. It can be r
 
 # execution
 
-To build the docker container `bun run build.ts` from the project root.
-This needs to be converted to node, I originally used bun but it doesn't run on my old NAS hardware
+To build the docker container `./build.ts` from the project root.
+
+Personally I tend to build the container on one computer then transfer it to another using:
+```
+docker save thetrav/nas-sync:latest | ssh travnas 'docker load'
+```
 
 To set up environment and compose:
 

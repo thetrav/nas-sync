@@ -1,6 +1,7 @@
 import { readdir, stat, mkdir, access } from "fs/promises";
 import { join } from "path";
 import { formatBytes } from "./fileListing.ts";
+import express from "express";
 
 // Store current local directory path in memory
 let currentLocalPath = process.env.LOCAL_ROOT ?? "/tmp";
@@ -97,4 +98,17 @@ export async function createLocalFolder(params: {path: string, name: string}) {
   await mkdir(fullPath);
   
   return { path: fullPath };
+}
+
+export function downloadLocalFile(req: express.Request, res: express.Response): void {
+  const filePath = req.query.path as string;
+  if (!filePath) {
+    res.status(400).json({ error: "path is required" });
+    return;
+  }
+  res.download(filePath, (err) => {
+    if (err) {
+      console.error("Download error:", err);
+    }
+  });
 }

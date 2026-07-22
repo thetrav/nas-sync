@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { RefreshButton } from './RefreshButton';
 import { BreadcrumbButton } from './BreadcrumbButton';
 import { AddButton } from './AddButton';
+import { DownloadButton } from './DownloadButton';
 import { NewFolder } from './NewFolder';
 import { useState } from 'react';
 
@@ -18,6 +19,8 @@ type FileListingPanelProps  = {
   onNavigate: (path: string) => void;
   onEnqueue?: (item: QueueItemCreate) => void;
   showEnqueue?: boolean;
+  onDownload?: (path: string) => void;
+  showDownload?: boolean;
   loading: boolean;
   error: {message: string} | null;
   localPath: string;
@@ -45,6 +48,8 @@ export function FileListingPanel({
   onNavigate,
   onEnqueue,
   showEnqueue = false,
+  onDownload,
+  showDownload = false,
   loading,
   error,
   localPath,
@@ -135,6 +140,7 @@ export function FileListingPanel({
               <div className="w-24 text-right">Size</div>
               <div className="w-32 text-right">Modified</div>
               {showEnqueue && <div className="w-8" />}
+              {showDownload && <div className="w-8" />}
             </div>
             
             {/* Files */}
@@ -186,6 +192,14 @@ export function FileListingPanel({
                   />
                 )}
                 {showEnqueue && file.isDirectory && <div className="w-8" />}
+                {showDownload && !file.isDirectory && (
+                  <DownloadButton
+                    disabled={loading}
+                    onClick={() => onDownload?.(filePath(currentPath, file.name))}
+                    label="Download"
+                  />
+                )}
+                {showDownload && file.isDirectory && <div className="w-8" />}
               </div>
             ))}
           </div>

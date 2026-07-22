@@ -1,5 +1,5 @@
 import express from "express";
-import { listLocal, createLocalFolder } from "./localFileSystem.ts";
+import { listLocal, createLocalFolder, downloadLocalFile } from "./localFileSystem.ts";
 import { queueList, queueEnqueue, removeFromQueue } from "./queue.ts";
 import { get, post, del } from "./requestHandlers.ts";
 import path from "path";
@@ -18,6 +18,7 @@ api.use(express.json());
 
 // API routes (must come before static files)
 api.get("/ssh",get(list),);
+api.get("/local/download", downloadLocalFile);
 api.get("/local", get(listLocal));
 api.post("/local", post(createLocalFolder));
 api.get("/queue", get(queueList));

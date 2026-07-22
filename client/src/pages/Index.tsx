@@ -5,6 +5,7 @@ import { useMobileLayout } from '@/hooks/use-mobile';
 import { HardDrive, Cloud, ArrowDownToLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { downloadLocalFileUrl } from '@/Api';
 
 type PanelId = 'local' | 'remote' | 'transfer';
 
@@ -33,6 +34,15 @@ const Index = () => {
 
   const isMobileLayout = useMobileLayout();
   const [activePanel, setActivePanel] = useState<PanelId>('local');
+
+  const handleDownload = (path: string) => {
+    const a = document.createElement('a');
+    a.href = downloadLocalFileUrl(path);
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   const tabs: { id: PanelId; icon: typeof HardDrive; label: string }[] = [
     { id: 'local', icon: HardDrive, label: 'Local' },
@@ -89,6 +99,8 @@ const Index = () => {
                 localPath={localPath}
                 remotePath={remotePath}
                 onCreateFolder={createFolder}
+                onDownload={handleDownload}
+                showDownload
                 noInternalScroll
                 wrapText
               />
@@ -160,6 +172,8 @@ const Index = () => {
             localPath={localPath}
             remotePath={remotePath}
             onCreateFolder={createFolder}
+            onDownload={handleDownload}
+            showDownload
           />
         </div>
 

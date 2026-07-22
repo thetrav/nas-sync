@@ -84,3 +84,7 @@ export async function enqueueFile(obj: QueueItemCreate): Promise<QueueItem> {
 export async function createLocalFolder(path: string, name: string): Promise<void> {
   await post<void>("/local", { path, name });
 }
+
+export function downloadLocalFileUrl(path: string): string {
+  return `${baseUrl}/local/download?path=${encodeURIComponent(path)}`;
+}
