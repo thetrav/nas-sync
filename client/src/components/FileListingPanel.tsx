@@ -123,7 +123,6 @@ export function FileListingPanel({
         <BreadcrumbButton 
           onClick={() => onNavigate('/')}
           label="/"
-          disabled={loading}
         />
         {pathParts.map((part, index) => (
           <span key={index} className="flex items-center gap-1 flex-shrink-0">
@@ -131,7 +130,6 @@ export function FileListingPanel({
             <BreadcrumbButton 
               onClick={() => handlePathClick(index)}
               label={part}
-              disabled={loading}
               isLast={index === pathParts.length - 1}
               className="font-mono"
             />
@@ -190,7 +188,7 @@ export function FileListingPanel({
               <div
                 key={i}
                 className="file-row group"
-                onClick={() => !loading && handleFileClick(file, i)}
+                onClick={() => handleFileClick(file, i)}
               >
                 <div className="w-5 flex-shrink-0">
                   {file.isDirectory ? (

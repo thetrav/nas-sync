@@ -1,62 +1,24 @@
 import { getLocalFiles, createLocalFolder } from "@/Api";
-import { FileEntry } from "@shared/types";
-import { useState, useCallback } from "react";
+import { useFileCache } from "./useFileCache";
+import { useCallback } from "react";
 
 export function useLocal() {
-  const [localPath, setLocalPath] = useState("");
-  const [localFiles, setLocalFiles] = useState<FileEntry[]>([]);
-  const [localLoading, setLocalLoading] = useState<boolean>(false);
-  const [localError, setLocalError] = useState<{message: string} | null>(null);
-  const refreshLocal = useCallback(async () => {
-    setLocalLoading(true);
-    setLocalError(null);
-    try {
-      const response = await getLocalFiles(localPath);
-      setLocalFiles(response.entries);
-      setLocalPath(response.currentPath);
-    } catch (e) {
-      setLocalError(e);
-    } finally {
-      setLocalLoading(false);
-    }
-  }, [localPath]);
-
-  const navigateLocal = useCallback(async (path: string) => {
-    setLocalLoading(true);
-    setLocalError(null);
-    try {
-      const response = await getLocalFiles(path);
-      setLocalFiles(response.entries);
-      setLocalPath(response.currentPath);
-    } catch (e) {
-      setLocalError(e);
-    } finally {
-      setLocalLoading(false);
-    }
-  }, []);
+  const cache = useFileCache("localFileCache", getLocalFiles);
 
   const createFolder = useCallback(async (folderName: string) => {
-    setLocalLoading(true);
-    setLocalError(null);
-    try {
-      await createLocalFolder(localPath, folderName);
-      await refreshLocal();
-    } catch (e) {
-      setLocalError(e);
-    } finally {
-      setLocalLoading(false);
-    }
-  }, [localPath, refreshLocal]);
+    await createLocalFolder(cache.path, folderName);
+    await cache.refresh();
+  }, [cache.path, cache.refresh]);
 
   return {
-    localPath,
-    setLocalPath,
-    localFiles,
-    setLocalFiles,
-    navigateLocal,
-    refreshLocal,
-    localLoading,
-    localError,
+    localPath: cache.path,
+    setLocalPath: cache.setPath,
+    localFiles: cache.files,
+    setLocalFiles: cache.setFiles,
+    navigateLocal: cache.navigate,
+    refreshLocal: cache.refresh,
+    localLoading: cache.loading,
+    localError: cache.error,
     createFolder,
   };
 }
