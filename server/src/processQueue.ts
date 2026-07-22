@@ -25,7 +25,6 @@ async function deleteJob(job: DownloadJob) {
 
 async function processQueueOnce() {
   if (await isPaused()) {
-    console.log("queue paused");
     return;
   }
 

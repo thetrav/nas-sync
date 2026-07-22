@@ -6,6 +6,7 @@ import { BreadcrumbButton } from './BreadcrumbButton';
 import { AddButton } from './AddButton';
 import { DownloadButton } from './DownloadButton';
 import { NewFolder } from './NewFolder';
+import { EnqueueAllDialog } from './EnqueueAllDialog';
 import { useState, useMemo } from 'react';
 
 
@@ -18,6 +19,7 @@ type FileListingPanelProps  = {
   onRefresh: () => void;
   onNavigate: (path: string) => void;
   onEnqueue?: (item: QueueItemCreate) => void;
+  onEnqueueAll?: (items: QueueItemCreate[]) => void;
   showEnqueue?: boolean;
   onDownload?: (path: string) => void;
   showDownload?: boolean;
@@ -47,6 +49,7 @@ export function FileListingPanel({
   onRefresh,
   onNavigate,
   onEnqueue,
+  onEnqueueAll,
   showEnqueue = false,
   onDownload,
   showDownload = false,
@@ -100,6 +103,21 @@ export function FileListingPanel({
   const handleCreateFolder = (folderName: string) => {
     onCreateFolder?.(folderName);
   };
+
+  const [enqueueAllDialogOpen, setEnqueueAllDialogOpen] = useState(false);
+
+  const enqueableItems = useMemo(() => 
+    files
+      .filter(file => !file.isDirectory && !["queued", "downloading"].includes(file.queueStatus))
+      .map(file => ({
+        remote_path: filePath(remotePath, file.name),
+        local_path: filePath(localPath, file.name),
+        size: file.size
+      })),
+    [files, remotePath, localPath]
+  );
+
+  const hasEnqueableFiles = enqueableItems.length > 0;
   
   return (
     <div className="panel h-full">
@@ -111,6 +129,16 @@ export function FileListingPanel({
             <span className="text-sm text-destructive ml-2">{error.message}</span>
           )}
         </div>
+        {showEnqueue && onEnqueue && hasEnqueableFiles && (
+          <button
+            onClick={() => setEnqueueAllDialogOpen(true)}
+            disabled={loading}
+            className="icon-button transition-all"
+            title="Enqueue all files in current folder"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        )}
         <RefreshButton 
           onClick={onRefresh} 
           title="Refresh" 
@@ -246,6 +274,15 @@ export function FileListingPanel({
           </div>
         )}
       </div>
+
+      {showEnqueue && onEnqueue && enqueueAllDialogOpen && (
+        <EnqueueAllDialog
+          open
+          onOpenChange={setEnqueueAllDialogOpen}
+          files={enqueableItems}
+          onEnqueue={onEnqueue}
+        />
+      )}
     </div>
   );
 }
