@@ -3,6 +3,7 @@ export type FileEntry = {
   isDirectory: boolean;
   fullPath: string;
   size?: string;
+  modified?: string;
   queueStatus?: "queued" | "downloading" | "completed" | "failed";
 };
 

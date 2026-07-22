@@ -1,4 +1,4 @@
-import { Folder, File, ChevronRight, Plus, HardDrive, Cloud } from 'lucide-react';
+import { Folder, File, ChevronRight, Plus, HardDrive, Cloud, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { FileEntry, QueueItemCreate } from "@shared/types";
 import { cn } from '@/lib/utils';
 import { RefreshButton } from './RefreshButton';
@@ -6,7 +6,7 @@ import { BreadcrumbButton } from './BreadcrumbButton';
 import { AddButton } from './AddButton';
 import { DownloadButton } from './DownloadButton';
 import { NewFolder } from './NewFolder';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 
 
@@ -61,8 +61,28 @@ export function FileListingPanel({
   const IconComponent = icon === 'local' ? HardDrive : Cloud;
   const [clickedFolderIndex, setClickedFolderIndex] = useState<number | null>(null);
   const [clickedFileIconIndex, setClickedFileIconIndex] = useState<number | null>(null);
+  const [sortConfig, setSortConfig] = useState<{column: 'name' | 'modified'; order: 'desc' | 'asc'} | null>(null);
   
   const pathParts = currentPath.split('/').filter(Boolean);
+
+  const sortedFiles = useMemo(() => {
+    if (!sortConfig) {
+      const folders = files.filter(f => f.isDirectory);
+      const fileEntries = files.filter(f => !f.isDirectory);
+      return [...folders, ...fileEntries];
+    }
+    
+    return [...files].sort((a, b) => {
+      if (sortConfig.column === 'name') {
+        const cmp = a.name.localeCompare(b.name);
+        return sortConfig.order === 'desc' ? -cmp : cmp;
+      } else {
+        const dateA = a.modified ? new Date(a.modified).getTime() : 0;
+        const dateB = b.modified ? new Date(b.modified).getTime() : 0;
+        return sortConfig.order === 'desc' ? dateB - dateA : dateA - dateB;
+      }
+    });
+  }, [files, sortConfig]);
   
   const handleFileClick = (file: FileEntry, index: number) => {
     if (file.isDirectory) {
@@ -136,15 +156,37 @@ export function FileListingPanel({
             {/* Header row */}
             <div className="file-row border-b border-panel-border text-xs text-muted-foreground font-medium sticky top-0 bg-card">
               <div className="w-5" />
-              <div className="flex-1">Name</div>
+              <button 
+                className="flex-1 text-left flex items-center gap-1 hover:text-foreground transition-colors"
+                onClick={() => setSortConfig(prev => {
+                  if (prev?.column !== 'name') return { column: 'name', order: 'asc' };
+                  if (prev.order === 'asc') return { column: 'name', order: 'desc' };
+                  return null;
+                })}
+              >
+                Name
+                {sortConfig?.column === 'name' && sortConfig.order === 'desc' && <ArrowDown className="w-3 h-3 text-foreground" />}
+                {sortConfig?.column === 'name' && sortConfig.order === 'asc' && <ArrowUp className="w-3 h-3 text-foreground" />}
+              </button>
               <div className="w-24 text-right">Size</div>
-              <div className="w-32 text-right">Modified</div>
+              <button 
+                className="w-32 text-right flex items-center justify-end gap-1 hover:text-foreground transition-colors"
+                onClick={() => setSortConfig(prev => {
+                  if (prev?.column !== 'modified') return { column: 'modified', order: 'desc' };
+                  if (prev.order === 'desc') return { column: 'modified', order: 'asc' };
+                  return null;
+                })}
+              >
+                Modified
+                {sortConfig?.column === 'modified' && sortConfig.order === 'desc' && <ArrowDown className="w-3 h-3 text-foreground" />}
+                {sortConfig?.column === 'modified' && sortConfig.order === 'asc' && <ArrowUp className="w-3 h-3 text-foreground" />}
+              </button>
               {showEnqueue && <div className="w-8" />}
               {showDownload && <div className="w-8" />}
             </div>
             
             {/* Files */}
-            {files.map((file, i) => (
+            {sortedFiles.map((file, i) => (
               <div
                 key={i}
                 className="file-row group"
@@ -174,8 +216,9 @@ export function FileListingPanel({
                   {file.isDirectory ? '—' : file.size}
                 </div>
                 <div className="w-32 text-right text-muted-foreground text-xs">
-                  {showEnqueue && file.queueStatus}
+                  {file.modified ? new Date(file.modified).toLocaleDateString() : '—'}
                 </div>
+                {showEnqueue && <div className="w-8">{file.queueStatus}</div>}
                 {showEnqueue && !file.isDirectory && !["queued", "downloading"].includes(file.queueStatus) && (
                   <AddButton
                     disabled={loading}

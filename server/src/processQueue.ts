@@ -49,7 +49,7 @@ async function processQueueOnce() {
         return;
       }
     } else if ((job.status === "completed" || job.status === "failed") && job.completed_at) {
-      if(new Date(job.completed_at!).getTime() < (new Date().getTime() - 1000*60*60*24)) {
+      if(new Date(job.completed_at).getTime() < (new Date().getTime() - 1000*60*60*24)) {
         console.log(`removing old job ${job.remote_path} to ${job.local_path}`);
         await deleteJob(job);
       }

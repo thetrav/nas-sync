@@ -65,6 +65,10 @@ export async function listFolderContents(path: string): Promise<FileEntry[]> {
   console.log(`listing`, path);
   const command = `ls -la "${path}" | tail -n +2`;
   const lines = await executeSshCommand(command);
+  return parseLines(lines, path);
+}
+
+export function parseLines(lines: string[], path: string) {
   
   const entries: FileEntry[] = [];
 
@@ -79,6 +83,9 @@ export async function listFolderContents(path: string): Promise<FileEntry[]> {
 
     const permissions = parts[0];
     const size = parts[4];
+    const month = parts[5];
+    const day = parts[6];
+    const timeOrYear = parts[7];
     const name = parts.slice(8).join(' ');
     
     // Skip "." and ".." entries
@@ -86,11 +93,19 @@ export async function listFolderContents(path: string): Promise<FileEntry[]> {
 
     const isDirectory = permissions.startsWith('d');
     
+    // Parse modified date from ls -la output
+    const currentYear = new Date().getFullYear();
+    const dateStr = timeOrYear.includes(':') 
+      ? `${month} ${day} ${currentYear} ${timeOrYear}` 
+      : `${month} ${day} ${timeOrYear}`;
+    const modified = new Date(dateStr).toISOString();
+    
     entries.push({
       name,
       isDirectory,
       fullPath: `${path}/${name}`,
       size: formatBytes(isDirectory ? 0 : parseInt(size) || 0),
+      modified,
     });
   }
 

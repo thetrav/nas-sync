@@ -46,6 +46,7 @@ export async function listLocal(params: {path: string}) {
         isDirectory: entry.isDirectory(),
         fullPath: fullPath,
         size: size,
+        modified: stats.mtime.toISOString(),
       };
     }),
   );
