@@ -34,7 +34,9 @@ export function useFileTransfer() {
     enqueueFile: apiEnqueueFile,
     deleteTransfer: apiDeleteTransfer,
     queueLoading,
-    queueError
+    queueError,
+    queuePaused,
+    togglePause,
   } = useQueue();
 
   // refresh everything once on initial load
@@ -91,6 +93,8 @@ export function useFileTransfer() {
     transfers,
     queueLoading,
     queueError,
+    queuePaused,
+    togglePause,
     refreshQueue,
     enqueueFile,
     deleteTransfer,

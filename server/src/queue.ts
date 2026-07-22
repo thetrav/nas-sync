@@ -3,7 +3,7 @@ import type {
   QueueResponse,
   QueueItemCreate,
 } from "../../shared/types/index.ts";
-import { db, withDb } from "./db.ts";
+import { db, withDb, getSetting, setSetting } from "./db.ts";
 
 import { ServerError } from "./ServerError.ts";
 
@@ -147,4 +147,22 @@ export async function removeFromQueue(params: {id: number}) {
   }
   return { success: true };
   });  
+}
+
+export async function queueIsPaused() {
+  return await withDb(null, async () => (await getSetting("queue_paused")) === "true");
+}
+
+export async function queuePause() {
+  return await withDb(null, async () => {
+    await setSetting("queue_paused", "true");
+    return { paused: true };
+  });
+}
+
+export async function queueResume() {
+  return await withDb(null, async () => {
+    await setSetting("queue_paused", "false");
+    return { paused: false };
+  });
 }

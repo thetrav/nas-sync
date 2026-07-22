@@ -1,4 +1,4 @@
-import { Trash2, ArrowDownToLine } from 'lucide-react';
+import { Trash2, ArrowDownToLine, Pause, Play } from 'lucide-react';
 import { QueueItem } from "@shared/types";
 import { cn } from '@/lib/utils';
 import { useRef, useEffect, useState, useMemo } from 'react';
@@ -12,6 +12,8 @@ type TransferQueueProps = {
   loading: boolean;
   error: {message: string} | null;
   noInternalScroll?: boolean;
+  queuePaused?: boolean;
+  onTogglePause?: () => void;
 }
 
 const statusLabels: Record<QueueItem['status'], string> = {
@@ -21,7 +23,7 @@ const statusLabels: Record<QueueItem['status'], string> = {
   failed: 'Error',
 };
 
-export function TransferQueue({ items, onDelete, onRefresh, loading, error, noInternalScroll = false }: TransferQueueProps) {
+export function TransferQueue({ items, onDelete, onRefresh, loading, error, noInternalScroll = false, queuePaused = false, onTogglePause }: TransferQueueProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [clickedDeleteId, setClickedDeleteId] = useState<number | null>(null);
@@ -70,6 +72,20 @@ export function TransferQueue({ items, onDelete, onRefresh, loading, error, noIn
           )}
         </div>
         <div className="flex items-center gap-2">
+          {onTogglePause && (
+            <button
+              onClick={onTogglePause}
+              className={cn(
+                "icon-button transition-all",
+                queuePaused
+                  ? "text-green-500 hover:text-green-400 hover:bg-green-500/10"
+                  : "text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+              )}
+              title={queuePaused ? "Resume queue" : "Pause queue"}
+            >
+              {queuePaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            </button>
+          )}
           <Switch
             checked={autoRefresh}
             onCheckedChange={setAutoRefresh}

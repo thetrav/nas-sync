@@ -1,6 +1,6 @@
 import express from "express";
 import { listLocal, createLocalFolder, downloadLocalFile } from "./localFileSystem.ts";
-import { queueList, queueEnqueue, removeFromQueue } from "./queue.ts";
+import { queueList, queueEnqueue, removeFromQueue, queueIsPaused, queuePause, queueResume } from "./queue.ts";
 import { get, post, del } from "./requestHandlers.ts";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -24,6 +24,9 @@ api.post("/local", post(createLocalFolder));
 api.get("/queue", get(queueList));
 api.post("/queue", post(queueEnqueue));
 api.delete("/queue/:id", del(removeFromQueue));
+api.get("/queue/paused", get(queueIsPaused));
+api.post("/queue/pause", post(queuePause));
+api.post("/queue/resume", post(queueResume));
 
 // Handle API miss
 api.use("/api/*", (req, res) => {

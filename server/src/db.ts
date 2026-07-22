@@ -26,6 +26,25 @@ export async function init() {
       completed text
     );`,
   );
+  await connection.exec(
+    `create table if not exists settings (
+      key text primary key,
+      value text not null
+    );`,
+  );
+}
+
+export async function getSetting(key: string): Promise<string | null> {
+  const row = await db().get(`select value from settings where key = ?`, key);
+  return row ? row.value : null;
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+  await db().run(
+    `insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value`,
+    key,
+    value,
+  );
 }
 
 export function db() {

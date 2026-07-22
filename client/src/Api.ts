@@ -85,6 +85,18 @@ export async function createLocalFolder(path: string, name: string): Promise<voi
   await post<void>("/local", { path, name });
 }
 
+export async function isQueuePaused(): Promise<boolean> {
+  return get<boolean>("/queue/paused");
+}
+
+export async function pauseQueue(): Promise<void> {
+  await post<void>("/queue/pause", {});
+}
+
+export async function resumeQueue(): Promise<void> {
+  await post<void>("/queue/resume", {});
+}
+
 export function downloadLocalFileUrl(path: string): string {
   return `${baseUrl}/local/download?path=${encodeURIComponent(path)}`;
 }

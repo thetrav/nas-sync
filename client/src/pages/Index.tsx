@@ -26,6 +26,8 @@ const Index = () => {
     transfers,
     queueLoading,
     queueError,
+    queuePaused,
+    togglePause,
     refreshQueue,
     enqueueFile,
     deleteTransfer,
@@ -135,6 +137,8 @@ const Index = () => {
                 loading={queueLoading}
                 error={queueError}
                 noInternalScroll
+                queuePaused={queuePaused}
+                onTogglePause={togglePause}
               />
             </div>
           )}
@@ -204,6 +208,8 @@ const Index = () => {
           onRefresh={refreshQueue}
           loading={queueLoading}
           error={queueError}
+          queuePaused={queuePaused}
+          onTogglePause={togglePause}
         />
       </div>
     </div>

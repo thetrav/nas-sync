@@ -1,10 +1,14 @@
-import { init, withDb } from "./db.ts";
+import { init, withDb, getSetting } from "./db.ts";
 import { formatBytes } from "./fileListing.ts";
 import { DownloadJob } from "./queue.ts";
 import { downloadFile } from "./rsync.ts";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function isPaused(): Promise<boolean> {
+  return withDb(null, async () => (await getSetting("queue_paused")) === "true");
 }
 
 async function allJobs(): Promise<DownloadJob[]> {
@@ -20,6 +24,11 @@ async function deleteJob(job: DownloadJob) {
 }
 
 async function processQueueOnce() {
+  if (await isPaused()) {
+    console.log("queue paused");
+    return;
+  }
+
   const jobs = await allJobs();
   for (const job of jobs) {
     if (job.status === "queued" || job.status === "downloading") {
